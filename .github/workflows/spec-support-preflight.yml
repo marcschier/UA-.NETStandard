@@ -1,5 +1,5 @@
 name: Supplemental split test preflight
-run-name: MasterBaseline at 204f06d602955d65c0d88b7fe0fe2e8954d3c34f
+run-name: AutoID at 45b54630f1d64cf7273f9b44e6c2d57decbc6531
 
 on:
   push:
@@ -15,7 +15,7 @@ env:
 
 jobs:
   managed:
-    name: MasterBaseline VSTest ${{ matrix.framework }}
+    name: AutoID VSTest ${{ matrix.framework }}
     runs-on: windows-latest
     timeout-minutes: 360
     strategy:
@@ -27,11 +27,73 @@ jobs:
       shell: pwsh
       run: New-Item -ItemType Directory -Force -Path 'D:\temp' | Out-Null
 
+    - name: Probe temporary-directory ACL inheritance
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $probe = Join-Path $env:TEMP "spec-acl-$([guid]::NewGuid().ToString('N'))"
+        $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+        function Set-UserOnlyAcl([string] $path) {
+            $security = [System.Security.AccessControl.DirectorySecurity]::new()
+            $security.SetAccessRuleProtection($true, $false)
+            $inheritance = [System.Security.AccessControl.InheritanceFlags]::ContainerInherit -bor
+                [System.Security.AccessControl.InheritanceFlags]::ObjectInherit
+            $rule = [System.Security.AccessControl.FileSystemAccessRule]::new(
+                $identity.User,
+                [System.Security.AccessControl.FileSystemRights]::FullControl,
+                $inheritance,
+                [System.Security.AccessControl.PropagationFlags]::None,
+                [System.Security.AccessControl.AccessControlType]::Allow)
+            $security.AddAccessRule($rule)
+            [System.IO.FileSystemAclExtensions]::SetAccessControl(
+                [System.IO.DirectoryInfo]::new($path), $security)
+        }
+        try {
+            $null = New-Item -ItemType Directory -Path $probe
+            foreach ($case in @('inherited-default', 'controlled-parent')) {
+                $parent = Join-Path $probe $case
+                $null = New-Item -ItemType Directory -Path $parent
+                if ($case -eq 'controlled-parent') {
+                    Set-UserOnlyAcl $parent
+                }
+                $root = Join-Path $parent 'store'
+                $private = Join-Path $root 'private'
+                $null = New-Item -ItemType Directory -Force -Path $private
+                Set-UserOnlyAcl $root
+                $directory = [System.IO.DirectoryInfo]::new($private)
+                $security = [System.IO.FileSystemAclExtensions]::GetAccessControl($directory)
+                $explicit = @($security.GetAccessRules(
+                    $true, $false, [System.Security.Principal.SecurityIdentifier]))
+                $inherited = @($security.GetAccessRules(
+                    $false, $true, [System.Security.Principal.SecurityIdentifier]))
+                Write-Host "${case}: explicit=$($explicit.Count), inherited=$($inherited.Count)"
+                foreach ($rule in $explicit) {
+                    $principal = if ($rule.IdentityReference -eq $identity.User) {
+                        'current user'
+                    } elseif ($rule.IdentityReference.Value -eq 'S-1-3-0') {
+                        'creator owner'
+                    } elseif ($rule.IdentityReference.Value -eq 'S-1-5-18') {
+                        'local system'
+                    } elseif ($rule.IdentityReference.Value -eq 'S-1-5-32-544') {
+                        'administrators'
+                    } else {
+                        'other'
+                    }
+                    Write-Host "  $principal $($rule.FileSystemRights) $($rule.InheritanceFlags)"
+                }
+            }
+        } finally {
+            $identity.Dispose()
+            if (Test-Path -LiteralPath $probe) {
+                Remove-Item -LiteralPath $probe -Recurse -Force
+            }
+        }
+
     - name: Checkout implementation
       uses: actions/checkout@v7
       with:
         repository: OPCFoundation/UA-.NETStandard
-        ref: 204f06d602955d65c0d88b7fe0fe2e8954d3c34f
+        ref: 45b54630f1d64cf7273f9b44e6c2d57decbc6531
         fetch-depth: 0
         persist-credentials: false
 
@@ -39,8 +101,8 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne '204f06d602955d65c0d88b7fe0fe2e8954d3c34f') {
-            throw "Checked out $actual, expected 204f06d602955d65c0d88b7fe0fe2e8954d3c34f."
+        if ($actual -ne '45b54630f1d64cf7273f9b44e6c2d57decbc6531') {
+            throw "Checked out $actual, expected 45b54630f1d64cf7273f9b44e6c2d57decbc6531."
         }
         Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
@@ -84,8 +146,20 @@ jobs:
             if (Compare-Object $expected $remaining -CaseSensitive) {
                 throw 'The generated VSTest solution does not contain exactly the expected projects.'
             }
-            $solution = 'UA.Preflight.VSTest.slnx'
-            $sourceSolution.Save((Join-Path (Get-Location).Path $solution))
+            $solutionDirectory = (New-Item -ItemType Directory -Force `
+              -Path 'obj\spec-support-preflight').FullName
+            foreach ($node in $sourceSolution.SelectNodes('//*[@Path]')) {
+                $original = $node.GetAttribute('Path').Replace('/', '\')
+                $absolute = [System.IO.Path]::GetFullPath($original, (Get-Location).Path)
+                $relative = [System.IO.Path]::GetRelativePath($solutionDirectory, $absolute)
+                $resolved = [System.IO.Path]::GetFullPath($relative, $solutionDirectory)
+                if ($resolved -cne $absolute) {
+                    throw "Relocated solution path '$relative' does not resolve to '$absolute'."
+                }
+                $node.SetAttribute('Path', $relative)
+            }
+            $solution = Join-Path $solutionDirectory 'UA.Preflight.VSTest.slnx'
+            $sourceSolution.Save($solution)
             Write-Host "Running $solution; the three TUnit projects run separately as NativeAOT."
         }
 
@@ -189,12 +263,12 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: MasterBaseline-vstest-${{ matrix.framework }}
+        name: AutoID-vstest-${{ matrix.framework }}
         path: D:\temp\solution-results
         if-no-files-found: warn
 
   aot:
-    name: MasterBaseline NativeAOT net10.0
+    name: AutoID NativeAOT net10.0
     runs-on: windows-latest
     timeout-minutes: 360
     steps:
@@ -206,7 +280,7 @@ jobs:
       uses: actions/checkout@v7
       with:
         repository: OPCFoundation/UA-.NETStandard
-        ref: 204f06d602955d65c0d88b7fe0fe2e8954d3c34f
+        ref: 45b54630f1d64cf7273f9b44e6c2d57decbc6531
         fetch-depth: 0
         persist-credentials: false
 
@@ -214,8 +288,8 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne '204f06d602955d65c0d88b7fe0fe2e8954d3c34f') {
-            throw "Checked out $actual, expected 204f06d602955d65c0d88b7fe0fe2e8954d3c34f."
+        if ($actual -ne '45b54630f1d64cf7273f9b44e6c2d57decbc6531') {
+            throw "Checked out $actual, expected 45b54630f1d64cf7273f9b44e6c2d57decbc6531."
         }
         Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
@@ -276,6 +350,6 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: MasterBaseline-nativeaot-net10.0
+        name: AutoID-nativeaot-net10.0
         path: D:\temp\aot-results
         if-no-files-found: warn
