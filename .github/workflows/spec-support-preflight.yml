@@ -1,5 +1,5 @@
 name: Supplemental split test preflight
-run-name: AutoID at 45b54630f1d64cf7273f9b44e6c2d57decbc6531
+run-name: MasterBaseline at 204f06d602955d65c0d88b7fe0fe2e8954d3c34f
 
 on:
   push:
@@ -15,7 +15,7 @@ env:
 
 jobs:
   managed:
-    name: AutoID VSTest ${{ matrix.framework }}
+    name: MasterBaseline VSTest ${{ matrix.framework }}
     runs-on: windows-latest
     timeout-minutes: 360
     strategy:
@@ -31,7 +31,7 @@ jobs:
       uses: actions/checkout@v7
       with:
         repository: OPCFoundation/UA-.NETStandard
-        ref: 45b54630f1d64cf7273f9b44e6c2d57decbc6531
+        ref: 204f06d602955d65c0d88b7fe0fe2e8954d3c34f
         fetch-depth: 0
         persist-credentials: false
 
@@ -39,8 +39,8 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne '45b54630f1d64cf7273f9b44e6c2d57decbc6531') {
-            throw "Checked out $actual, expected 45b54630f1d64cf7273f9b44e6c2d57decbc6531."
+        if ($actual -ne '204f06d602955d65c0d88b7fe0fe2e8954d3c34f') {
+            throw "Checked out $actual, expected 204f06d602955d65c0d88b7fe0fe2e8954d3c34f."
         }
         Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
@@ -189,12 +189,12 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: AutoID-vstest-${{ matrix.framework }}
+        name: MasterBaseline-vstest-${{ matrix.framework }}
         path: D:\temp\solution-results
         if-no-files-found: warn
 
   aot:
-    name: AutoID NativeAOT net10.0
+    name: MasterBaseline NativeAOT net10.0
     runs-on: windows-latest
     timeout-minutes: 360
     steps:
@@ -206,7 +206,7 @@ jobs:
       uses: actions/checkout@v7
       with:
         repository: OPCFoundation/UA-.NETStandard
-        ref: 45b54630f1d64cf7273f9b44e6c2d57decbc6531
+        ref: 204f06d602955d65c0d88b7fe0fe2e8954d3c34f
         fetch-depth: 0
         persist-credentials: false
 
@@ -214,8 +214,8 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne '45b54630f1d64cf7273f9b44e6c2d57decbc6531') {
-            throw "Checked out $actual, expected 45b54630f1d64cf7273f9b44e6c2d57decbc6531."
+        if ($actual -ne '204f06d602955d65c0d88b7fe0fe2e8954d3c34f') {
+            throw "Checked out $actual, expected 204f06d602955d65c0d88b7fe0fe2e8954d3c34f."
         }
         Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
@@ -276,6 +276,6 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: AutoID-nativeaot-net10.0
+        name: MasterBaseline-nativeaot-net10.0
         path: D:\temp\aot-results
         if-no-files-found: warn
