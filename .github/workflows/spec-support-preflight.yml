@@ -1,5 +1,5 @@
 name: Supplemental split test preflight
-run-name: Pumps at c0321bdb75c3c404cd1883bb51542a8709b9def3
+run-name: PackML at b22aa1c192e6b7191b01bcfbbce0b9ff7f7910fa
 
 on:
   push:
@@ -15,7 +15,7 @@ env:
 
 jobs:
   managed:
-    name: Pumps VSTest ${{ matrix.framework }}
+    name: PackML VSTest ${{ matrix.framework }}
     runs-on: windows-latest
     timeout-minutes: 360
     strategy:
@@ -93,7 +93,7 @@ jobs:
       uses: actions/checkout@v7
       with:
         repository: OPCFoundation/UA-.NETStandard
-        ref: c0321bdb75c3c404cd1883bb51542a8709b9def3
+        ref: b22aa1c192e6b7191b01bcfbbce0b9ff7f7910fa
         fetch-depth: 0
         persist-credentials: false
 
@@ -101,8 +101,8 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne 'c0321bdb75c3c404cd1883bb51542a8709b9def3') {
-            throw "Checked out $actual, expected c0321bdb75c3c404cd1883bb51542a8709b9def3."
+        if ($actual -ne 'b22aa1c192e6b7191b01bcfbbce0b9ff7f7910fa') {
+            throw "Checked out $actual, expected b22aa1c192e6b7191b01bcfbbce0b9ff7f7910fa."
         }
         Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
@@ -263,12 +263,12 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: Pumps-vstest-${{ matrix.framework }}
+        name: PackML-vstest-${{ matrix.framework }}
         path: D:\temp\solution-results
         if-no-files-found: warn
 
   aot:
-    name: Pumps NativeAOT net10.0
+    name: PackML NativeAOT net10.0
     runs-on: windows-latest
     timeout-minutes: 360
     steps:
@@ -280,7 +280,7 @@ jobs:
       uses: actions/checkout@v7
       with:
         repository: OPCFoundation/UA-.NETStandard
-        ref: c0321bdb75c3c404cd1883bb51542a8709b9def3
+        ref: b22aa1c192e6b7191b01bcfbbce0b9ff7f7910fa
         fetch-depth: 0
         persist-credentials: false
 
@@ -288,8 +288,8 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne 'c0321bdb75c3c404cd1883bb51542a8709b9def3') {
-            throw "Checked out $actual, expected c0321bdb75c3c404cd1883bb51542a8709b9def3."
+        if ($actual -ne 'b22aa1c192e6b7191b01bcfbbce0b9ff7f7910fa') {
+            throw "Checked out $actual, expected b22aa1c192e6b7191b01bcfbbce0b9ff7f7910fa."
         }
         Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
@@ -350,6 +350,6 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: Pumps-nativeaot-net10.0
+        name: PackML-nativeaot-net10.0
         path: D:\temp\aot-results
         if-no-files-found: warn
