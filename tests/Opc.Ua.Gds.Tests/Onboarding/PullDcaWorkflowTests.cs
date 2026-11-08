@@ -514,19 +514,20 @@ namespace Opc.Ua.Gds.Tests.Onboarding
         }
 
         /// <summary>
-        /// Request snapshotting preserves the distinction between null and empty application-name arrays.
+        /// Request snapshotting preserves the application-name value exposed by the generated record.
         /// </summary>
         [TestCase(true, false)]
         [TestCase(false, false)]
         [TestCase(true, true)]
         [TestCase(false, true)]
-        public async Task RequestSnapshotPreservesManagedApplicationNameArrayShape(
+        public async Task RequestSnapshotPreservesManagedApplicationNameArrayValue(
             bool nullNames, bool externalAuthentication)
         {
             var fixture = new Fixture();
             PullDcaManagedApplication application = CreateApplication();
             application.Application.ApplicationNames = nullNames ? default : [];
-            Assert.That(application.Application.ApplicationNames.IsNull, Is.EqualTo(nullNames));
+            ArrayOf<LocalizedText> suppliedNames = application.Application.ApplicationNames;
+            Assert.That(suppliedNames.IsEmpty, Is.True);
             PullDcaRequest request = CreateRequest() with { ManagedApplications = [application] };
 
             PullDcaWorkflow workflow = fixture.Create();
@@ -541,8 +542,8 @@ namespace Opc.Ua.Gds.Tests.Onboarding
 
             ArrayOf<LocalizedText> registeredNames =
                 fixture.Connection.RegisteredApplication!.Application.ApplicationNames;
-            Assert.That(registeredNames.IsNull, Is.EqualTo(nullNames));
-            Assert.That(registeredNames.Count, Is.Zero);
+            Assert.That(registeredNames.IsNull, Is.EqualTo(suppliedNames.IsNull));
+            Assert.That(registeredNames, Is.EqualTo(suppliedNames));
         }
 
         /// <summary>
