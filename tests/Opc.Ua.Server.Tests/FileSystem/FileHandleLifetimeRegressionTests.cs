@@ -374,8 +374,9 @@ namespace Opc.Ua.Server.Tests.FileSystem
         /// <summary>
         /// A cancellation-ignoring provider open retains exclusivity until its late stream has been disposed.
         /// </summary>
-        [Test]
-        public async Task PendingOpenKeepsWriterReservedUntilLateStreamCleanupAsync()
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task PendingOpenKeepsWriterReservedUntilLateStreamCleanupAsync(bool useInlineClose)
         {
             var release = new TaskCompletionSource<Stream>(TaskCreationOptions.RunContinuationsAsynchronously);
             using var stream = new MemoryStream(new byte[4], writable: true);
@@ -388,7 +389,14 @@ namespace Opc.Ua.Server.Tests.FileSystem
                 .AsTask();
             try
             {
-                await handles.CloseSessionAsync(s_session).ConfigureAwait(false);
+                if (useInlineClose)
+                {
+                    handles.CloseSession(s_session, defer: false);
+                }
+                else
+                {
+                    await handles.CloseSessionAsync(s_session).ConfigureAwait(false);
+                }
                 Assert.That(handles.TryBlockOpens(), Is.False);
                 (ServiceResult blocked, _) = await handles.OpenAsync(s_other, 7, CancellationToken.None)
                     .ConfigureAwait(false);
@@ -465,8 +473,9 @@ namespace Opc.Ua.Server.Tests.FileSystem
         /// <summary>
         /// An opt-in provider that cooperates with cancellation does not resurrect a session-owned open.
         /// </summary>
-        [Test]
-        public async Task CooperativePendingOpenCancellationReturnsSessionClosedAsync()
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task CooperativePendingOpenCancellationReturnsSessionClosedAsync(bool useInlineClose)
         {
             Mock<IFileSystemReadWriteProvider> provider = Provider(Stream.Null);
             provider.Setup(value => value.OpenReadWriteAsync(
@@ -476,7 +485,14 @@ namespace Opc.Ua.Server.Tests.FileSystem
             await using var handles = new FileHandle(provider.Object, "file");
             Task<(ServiceResult Result, uint Handle)> open = handles.OpenAsync(s_session, 3, CancellationToken.None)
                 .AsTask();
-            await handles.CloseSessionAsync(s_session).ConfigureAwait(false);
+            if (useInlineClose)
+            {
+                handles.CloseSession(s_session, defer: false);
+            }
+            else
+            {
+                await handles.CloseSessionAsync(s_session).ConfigureAwait(false);
+            }
             (ServiceResult result, uint id) = await open.ConfigureAwait(false);
             Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.BadSessionClosed));
             Assert.That(id, Is.Zero);

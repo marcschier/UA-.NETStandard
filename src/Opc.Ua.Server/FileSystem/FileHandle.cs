@@ -260,7 +260,7 @@ namespace Opc.Ua.Server.FileSystem
             }
             Stream? stream = null;
             bool accepted = false;
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(
+            var linked = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken, pending!.Lifetime.Token);
             try
             {
@@ -289,23 +289,33 @@ namespace Opc.Ua.Server.FileSystem
             }
             finally
             {
-                if (!accepted)
+                try
                 {
-                    try
+                    if (!accepted)
                     {
-                        await DisposeRejectedStreamAsync(pending, stream).ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        lock (m_lock)
+                        try
                         {
-                            pending.Closing = true;
+                            await DisposeRejectedStreamAsync(pending, stream).ConfigureAwait(false);
                         }
-                        pending.Opened.TrySetResult(true);
+                        finally
+                        {
+                            lock (m_lock)
+                            {
+                                pending.Closing = true;
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    // Inline shutdown may treat an opened handle as idle once this signal is set.
+                    linked.Dispose();
+                    pending!.Opened.TrySetResult(true);
+                    if (!accepted)
+                    {
                         await TrackCleanup(pending, defer: true).ConfigureAwait(false);
                     }
                 }
-                pending!.Opened.TrySetResult(true);
             }
         }
 
