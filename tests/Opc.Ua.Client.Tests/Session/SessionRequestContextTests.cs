@@ -355,6 +355,45 @@ namespace Opc.Ua.Client.Tests.SessionContexts
         }
 
         /// <summary>
+        /// Only confidential dispatch reads physical security metadata again after capture.
+        /// </summary>
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task DispatchReadsPhysicalEndpointOnlyForConfidentialContext(bool confidential)
+        {
+            await using var fixture = new SessionRequestContextTestContext(
+                securityMode: MessageSecurityMode.SignAndEncrypt);
+            await using SessionRequestContext context = confidential
+                ? await SessionRequestContext.CaptureConfidentialAsync(fixture.ManagedSession).ConfigureAwait(false)
+                : await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
+            var failure = new InvalidOperationException("Physical endpoint metadata is unavailable.");
+            fixture.Channel.SetupGet(channel => channel.EndpointDescription).Throws(failure);
+            fixture.Handler = (_, _) => new ValueTask<IServiceResponse>(new ReadResponse
+            {
+                Results = [new DataValue(Variant.From(19))]
+            });
+
+            if (confidential)
+            {
+                InvalidOperationException? error = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                    await context.Session.ReadAsync(null, 0, TimestampsToReturn.Neither,
+                        [new ReadValueId { NodeId = new NodeId(10u), AttributeId = Attributes.Value }])
+                        .ConfigureAwait(false));
+                Assert.That(error, Is.SameAs(failure));
+                Assert.That(fixture.Requests, Is.Empty);
+            }
+            else
+            {
+                ReadResponse response = await context.Session.ReadAsync(null, 0, TimestampsToReturn.Neither,
+                    [new ReadValueId { NodeId = new NodeId(10u), AttributeId = Attributes.Value }])
+                    .ConfigureAwait(false);
+                Assert.That(response.Results[0].WrappedValue.TryGetValue(out int value), Is.True);
+                Assert.That(value, Is.EqualTo(19));
+                Assert.That(fixture.Requests, Has.Count.EqualTo(1));
+            }
+        }
+
+        /// <summary>
         /// Capture preserves collection values after generated setters normalize null arrays to empty.
         /// </summary>
         [TestCase(false)]

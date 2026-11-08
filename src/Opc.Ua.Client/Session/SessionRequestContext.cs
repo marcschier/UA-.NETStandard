@@ -271,7 +271,10 @@ namespace Opc.Ua.Client
                 throw InvalidSession();
             }
             ct.ThrowIfCancellationRequested();
-            ValidateConfidentiality(m_transport.EndpointDescription);
+            if (m_requireConfidentiality)
+            {
+                ValidateConfidentiality(m_transport.EndpointDescription);
+            }
             request.RequestHeader.AuthenticationToken = m_authenticationToken;
 
             // A managed lease may wait, swap transports, retry, or reject an already completed
