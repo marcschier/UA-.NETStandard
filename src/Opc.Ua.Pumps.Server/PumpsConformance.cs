@@ -265,6 +265,7 @@ namespace Opc.Ua.Pumps.Server
                 }
                 if (!IsPumpType(pump, ObjectTypes.PumpType) ||
                     !IsComplete(pump) ||
+                    !IsOrganizedInMachinesFolder(pump) ||
                     !HasWritableIdentification(pump))
                 {
                     return false;
@@ -337,7 +338,9 @@ namespace Opc.Ua.Pumps.Server
                 identification.ReferenceTypeId != Opc.Ua.Types.ReferenceTypeIds.HasAddIn ||
                 !HasDirectAddInReference(pump, identification) ||
                 !IsComplete(identification) ||
-                !HasReadAccess(identification))
+                !HasReadAccess(identification) ||
+                !PumpIdentificationExtensions.HasPersistentBinding(m_runtime, pump) ||
+                !IsReadOnlyProductInstanceUri(identification))
             {
                 return false;
             }
@@ -348,6 +351,55 @@ namespace Opc.Ua.Pumps.Server
                     identification, Opc.Ua.Di.BrowseNames.ComponentName, m_runtime.NamespaceIndices.Di) &&
                 IsWritableIdentityField(
                     identification, Opc.Ua.Machinery.BrowseNames.Location, m_runtime.NamespaceIndices.Machinery);
+        }
+
+        /// <summary>
+        /// Requires the live pump to be organized directly from the standard Machinery Machines folder.
+        /// </summary>
+        private bool IsOrganizedInMachinesFolder(PumpState pump)
+        {
+            NodeId machinesNodeId = NodeId.Create(
+                Opc.Ua.Machinery.Objects.Machines,
+                Opc.Ua.Machinery.Namespaces.Machinery,
+                m_runtime.SystemContext.NamespaceUris);
+            if (m_runtime.Manager.FindPredefinedNode(machinesNodeId) is not NodeState machines)
+            {
+                return false;
+            }
+
+            var references = new List<IReference>();
+            machines.GetReferences(m_runtime.SystemContext, references);
+            foreach (IReference reference in references)
+            {
+                if (!reference.IsInverse &&
+                    m_runtime.SystemContext.TypeTable.IsTypeOf(
+                        reference.ReferenceTypeId, Opc.Ua.Types.ReferenceTypeIds.Organizes) &&
+                    !reference.TargetId.IsAbsolute &&
+                    ExpandedNodeId.ToNodeId(reference.TargetId, m_runtime.SystemContext.NamespaceUris) ==
+                        pump.NodeId)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Requires ProductInstanceUri to remain readable and non-writable after identity activation.
+        /// </summary>
+        private bool IsReadOnlyProductInstanceUri(PumpIdentificationState identification)
+        {
+            return identification.FindChild(
+                m_runtime.SystemContext,
+                new QualifiedName(Opc.Ua.Di.BrowseNames.ProductInstanceUri, m_runtime.NamespaceIndices.Di))
+                is BaseVariableState variable &&
+                IsRegistered(variable) &&
+                (variable.AccessLevel & AccessLevels.CurrentWrite) == 0 &&
+                (variable.UserAccessLevel & AccessLevels.CurrentWrite) == 0 &&
+                variable.OnSimpleWriteValueAsync is null &&
+                variable.OnSimpleWriteValue is null &&
+                variable.OnWriteValueAsync is null &&
+                variable.OnWriteValue is null;
         }
 
         /// <summary>

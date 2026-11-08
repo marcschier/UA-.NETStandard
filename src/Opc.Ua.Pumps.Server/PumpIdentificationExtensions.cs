@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -195,13 +196,39 @@ namespace Opc.Ua.Pumps.Server
                 }
                 identity.AccessLevel = (byte)(identity.AccessLevel & ~AccessLevels.CurrentWrite);
                 identity.UserAccessLevel = (byte)(identity.UserAccessLevel & ~AccessLevels.CurrentWrite);
-                registrations.Identities.Add(productInstanceUri, pump.NodeId);
+                if (!registrations.Identities.TryAdd(
+                    productInstanceUri,
+                    new IdentityBinding(pump.NodeId, store)))
+                {
+                    throw new InvalidOperationException("This ProductInstanceUri already has an identity binding.");
+                }
             }
             finally
             {
                 registrations.Gate.Release();
             }
             return pump;
+        }
+
+        /// <summary>
+        /// Verifies that the pump's current absolute identity still has its persistent AMB binding.
+        /// </summary>
+        internal static bool HasPersistentBinding(PumpsRuntime runtime, PumpState pump)
+        {
+            if (!s_registrations.TryGetValue(runtime, out IdentityRegistrations? registrations) ||
+                pump.Identification?.FindChild(
+                    runtime.SystemContext,
+                    new QualifiedName(Opc.Ua.Di.BrowseNames.ProductInstanceUri, runtime.NamespaceIndices.Di))
+                    is not BaseVariableState identity ||
+                !identity.WrappedValue.TryGetValue(out string productInstanceUri) ||
+                !Uri.TryCreate(productInstanceUri, UriKind.Absolute, out _))
+            {
+                return false;
+            }
+
+            return registrations.Identities.TryGetValue(productInstanceUri, out IdentityBinding? binding) &&
+                binding.PumpNodeId == pump.NodeId &&
+                binding.Store.IsPersistent;
         }
 
         /// <summary>
@@ -243,8 +270,14 @@ namespace Opc.Ua.Pumps.Server
             /// <summary>
             /// Already bound stable identities.
             /// </summary>
-            public Dictionary<string, NodeId> Identities { get; } = new(StringComparer.Ordinal);
+            public ConcurrentDictionary<string, IdentityBinding> Identities { get; } =
+                new(StringComparer.Ordinal);
         }
+
+        /// <summary>
+        /// Associates a pump identity with the persistent AMB store that owns its retained values.
+        /// </summary>
+        private sealed record IdentityBinding(NodeId PumpNodeId, IAssetConfigurationStore Store);
 
         /// <summary>Registrations do not extend an address-space owner's lifetime.</summary>
         private static readonly ConditionalWeakTable<PumpsRuntime, IdentityRegistrations> s_registrations = new();
