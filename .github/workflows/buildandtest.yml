@@ -1,14 +1,10 @@
 name: AutoID isolated coverage diagnostic
-
 on:
   workflow_dispatch:
-
 permissions:
   contents: read
-
 env:
   NBGV_SetCloudBuildVersionVars: 'false'
-
 jobs:
   autoid:
     runs-on: windows-latest
@@ -26,93 +22,136 @@ jobs:
     - uses: actions/setup-dotnet@v6
       with:
         dotnet-version: '10.0.403'
-    - name: AutoID baseline, focused candidate and coverage
+    - name: Execute and measure AutoID tests
       shell: pwsh
       run: |
         $ErrorActionPreference = 'Stop'
         $results = Join-Path $env:GITHUB_WORKSPACE 'diagnostic-results'
         New-Item -ItemType Directory -Path $results -Force | Out-Null
-        "diagnostic_sha=$env:GITHUB_SHA" | Set-Content (Join-Path $results 'identity.txt')
-        'baseline_sha=e4c6a5ebd96d3281fc8f1c592b166775607481df' |
-          Add-Content (Join-Path $results 'identity.txt')
+        "diagnostic_sha=$env:GITHUB_SHA`ncandidate_sha=d5db59a6b1fabb0e9d16c805120be19c2267019f`nbaseline_sha=e4c6a5ebd96d3281fc8f1c592b166775607481df" |
+          Set-Content (Join-Path $results 'identity.txt')
+        . (Join-Path $env:GITHUB_WORKSPACE 'candidate\.github\scripts\get-test-verdict.ps1')
+        $failures = [System.Collections.Generic.List[string]]::new()
+
+        function Invoke-DiagnosticDotnet {
+          param([string[]]$CommandArguments, [string]$LogPath)
+          "dotnet $($CommandArguments -join ' ')" | Set-Content $LogPath
+          Write-Host "dotnet $($CommandArguments -join ' ')"
+          $start = [System.Diagnostics.ProcessStartInfo]::new()
+          $start.FileName = (Get-Command dotnet -CommandType Application).Source
+          $start.WorkingDirectory = (Get-Location).Path
+          $start.UseShellExecute = $false
+          $start.RedirectStandardOutput = $true
+          $start.RedirectStandardError = $true
+          foreach ($argument in $CommandArguments) {
+            $start.ArgumentList.Add($argument)
+          }
+          $process = [System.Diagnostics.Process]::new()
+          $process.StartInfo = $start
+          try {
+            if (-not $process.Start()) { throw 'dotnet did not start.' }
+            $stdout = $process.StandardOutput.ReadToEndAsync()
+            $stderr = $process.StandardError.ReadToEndAsync()
+            $process.WaitForExit()
+            $output = $stdout.GetAwaiter().GetResult()
+            $errors = $stderr.GetAwaiter().GetResult()
+            $output | Add-Content $LogPath
+            $errors | Add-Content $LogPath
+            "exit_code=$($process.ExitCode)" | Add-Content $LogPath
+            Write-Host $output
+            Write-Host $errors
+            return $process.ExitCode
+          }
+          finally { $process.Dispose() }
+        }
 
         function Invoke-AutoIdTests {
           param([string]$Checkout, [string]$Framework, [string]$Label,
                 [string]$Filter, [bool]$Coverage)
+          $destination = Join-Path $results $Label
+          New-Item -ItemType Directory -Path $destination -Force | Out-Null
           Push-Location (Join-Path $env:GITHUB_WORKSPACE $Checkout)
           try {
             $project = 'tests\Opc.Ua.AutoID.Tests\Opc.Ua.AutoID.Tests.csproj'
-            $destination = Join-Path $results $Label
-            New-Item -ItemType Directory -Path $destination -Force | Out-Null
-            $arguments = @('test', $project, '--no-restore', '-c', 'Release',
-              '-f', $Framework, "-p:CustomTestTarget=$Framework",
-              '--filter', $Filter, '--logger', "trx;LogFileName=$Label.trx",
-              '--results-directory', $destination, '--blame-hang-timeout', '10m')
-            if ($Coverage) {
-              $arguments += @('--collect', 'XPlat Code Coverage')
+            $assets = 'tests\Opc.Ua.AutoID.Tests\obj\project.assets.json'
+            $assetTarget = if ($Framework -eq 'net48') { '.NETFramework,Version=v4.8' } else { $Framework }
+            $properties = @("-p:CustomTestTarget=$Framework", '-p:IsTestProject=true')
+            $testArguments = @('test', $project, '--no-restore', '-c', 'Release',
+              '-f', $Framework) + $properties + @('--filter', $Filter,
+              '--logger', "trx;LogFileName=$Label.trx", '--results-directory', $destination,
+              '--blame-hang-timeout', '10m')
+            if ($Coverage) { $testArguments += @('--collect', 'XPlat Code Coverage') }
+            $initialLog = Join-Path $destination 'initial.log'
+            "assets_before=$(Test-Path -LiteralPath $assets)" |
+              Set-Content (Join-Path $destination 'asset-check.txt')
+            $exitCode = Invoke-DiagnosticDotnet $testArguments $initialLog
+            $missingAssets = -not (Test-Path -LiteralPath $assets)
+            if (-not $missingAssets) {
+              $assetDocument = Get-Content -Raw $assets | ConvertFrom-Json
+              $missingAssets = $assetDocument.targets.PSObject.Properties.Name -notcontains $assetTarget
             }
-            & dotnet @arguments 2>&1 | Tee-Object -FilePath (Join-Path $destination 'initial.log')
-            $exitCode = $LASTEXITCODE
-            if ($exitCode -ne 0 -and
-                (Select-String -Path (Join-Path $destination 'initial.log') -Pattern 'NETSDK1004' -Quiet)) {
-              & dotnet restore $project "-p:CustomTestTarget=$Framework" 2>&1 |
-                Tee-Object -FilePath (Join-Path $destination 'restore.log')
-              if ($LASTEXITCODE -ne 0) {
-                throw "Restore failed for $Label."
+            "assets_missing_after=$missingAssets" |
+              Add-Content (Join-Path $destination 'asset-check.txt')
+            if ($missingAssets) {
+              $restoreArguments = @('restore', $project, "-p:CustomTestTarget=$Framework")
+              $restoreExit = Invoke-DiagnosticDotnet $restoreArguments (Join-Path $destination 'restore.log')
+              if ($restoreExit -ne 0 -or -not (Test-Path -LiteralPath $assets)) {
+                throw 'Missing-assets restore failed.'
               }
-              & dotnet @arguments 2>&1 | Tee-Object -FilePath (Join-Path $destination 'test.log')
-              $exitCode = $LASTEXITCODE
+              $exitCode = Invoke-DiagnosticDotnet $testArguments (Join-Path $destination 'test.log')
             }
-            if ($exitCode -ne 0) {
-              throw "$Label failed with exit code $exitCode."
-            }
-            [xml]$trx = Get-Content -Raw (Join-Path $destination "$Label.trx")
-            $counters = $trx.TestRun.ResultSummary.Counters
-            if ([int]$counters.passed -lt 1 -or [int]$counters.failed -ne 0 -or
-                [int]$counters.error -ne 0 -or [int]$counters.timeout -ne 0 -or
-                [int]$counters.aborted -ne 0) {
-              throw "Unexpected test verdict for $Label."
-            }
-            "$Label : $($counters.passed) passed, $($counters.failed) failed" |
-              Tee-Object -FilePath (Join-Path $results 'verdicts.txt') -Append
+            $measurement = Measure-TestResults $destination
+            $verdict = Get-TestRunVerdict -TrxFileCount $measurement.Files `
+              -Total $measurement.Total -Passed $measurement.Passed -Failed $measurement.Failed `
+              -FixtureFailures $measurement.FixtureFailures -RunFailures $measurement.RunFailures `
+              -ExitCode $exitCode -TimedOut $false
+            @{ Measurement = $measurement; Verdict = $verdict; ExitCode = $exitCode } |
+              ConvertTo-Json -Depth 6 | Set-Content (Join-Path $destination 'verdict.json')
+            "$Label : $($measurement.Passed) passed of $($measurement.Total), verdict=$($verdict.Passed), reason=$($verdict.Reason)" |
+              Add-Content $env:GITHUB_STEP_SUMMARY
+            if (-not $verdict.Passed) { throw $verdict.Reason }
           }
-          finally {
-            Pop-Location
+          catch {
+            "$Label : $($_.Exception.Message)" | Set-Content (Join-Path $destination 'failure.txt')
+            $failures.Add("$Label : $($_.Exception.Message)")
           }
+          finally { Pop-Location }
         }
 
         $suiteFilter = 'TestCategory!=LongRunning&TestCategory!=Stress'
-        Invoke-AutoIdTests baseline net10.0 baseline-net10 $suiteFilter $true
         Invoke-AutoIdTests candidate net10.0 focused-net10 `
           'FullyQualifiedName~AutoIdClientBranchTests' $false
         Invoke-AutoIdTests candidate net10.0 candidate-net10 $suiteFilter $true
         Invoke-AutoIdTests candidate net48 focused-net48 `
           'FullyQualifiedName~AutoIdClientBranchTests' $false
         Invoke-AutoIdTests candidate net48 candidate-net48 $suiteFilter $false
-
+        Invoke-AutoIdTests baseline net10.0 baseline-net10 $suiteFilter $true
         $comparison = foreach ($label in @('baseline-net10', 'candidate-net10')) {
           $reports = @(Get-ChildItem (Join-Path $results $label) -Filter coverage.cobertura.xml -Recurse)
           if ($reports.Count -ne 1) {
-            throw "Expected one Cobertura report for $label; found $($reports.Count)."
+            $failures.Add("$label : expected one coverage report, found $($reports.Count).")
+            continue
           }
           [xml]$coverage = Get-Content -Raw $reports[0].FullName
           $package = @($coverage.coverage.packages.package |
             Where-Object { $_.name -eq 'Opc.Ua.AutoID.Client' })
           if ($package.Count -ne 1) {
-            throw "Expected AutoID client coverage package for $label."
+            $failures.Add("$label : AutoID client coverage package missing.")
+            continue
           }
           [pscustomobject]@{
             Label = $label
-            Package = $package[0].name
             LineRate = $package[0].GetAttribute('line-rate')
             BranchRate = $package[0].GetAttribute('branch-rate')
           }
         }
         $comparison | ConvertTo-Json | Set-Content (Join-Path $results 'coverage-comparison.json')
         $comparison | Format-Table | Out-String | Add-Content $env:GITHUB_STEP_SUMMARY
-        Get-Content (Join-Path $results 'verdicts.txt') | Add-Content $env:GITHUB_STEP_SUMMARY
-        'Targeted AutoID diagnostic only; not full solution or PR qualification.' |
-          Add-Content $env:GITHUB_STEP_SUMMARY
+        'Targeted AutoID only; not solution or PR qualification.' | Add-Content $env:GITHUB_STEP_SUMMARY
+        if ($failures.Count -gt 0) {
+          $failures | Set-Content (Join-Path $results 'failures.txt')
+          throw ($failures -join '; ')
+        }
     - name: Preserve diagnostic evidence
       if: always()
       uses: actions/upload-artifact@v7
