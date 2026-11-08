@@ -138,6 +138,52 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             Assert.That(pending.RequestId, Is.EqualTo(kRequestId));
         }
 
+        /// <summary>
+        /// A connection cannot change its selected identity after validation while activation is suspended.
+        /// </summary>
+        [Test]
+        public async Task SelectedIdentityRemainsOwnedDuringActivationAsync()
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var fixture = new Fixture();
+            byte[] selectedIdentityBytes = [51, 52, 53];
+            ByteString expectedIdentity = ByteString.From(selectedIdentityBytes.AsSpan());
+            fixture.Connection.Selection = fixture.Connection.Selection with
+            {
+                SelectedIdentity = ByteString.From(selectedIdentityBytes)
+            };
+            PullDcaRequest request = CreateRequest() with
+            {
+                IdentityOffer = new PullDcaIdentityOffer([expectedIdentity], [kIssuer], ["ticket"])
+            };
+            var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            fixture.Host.ActivationWait = async ct =>
+            {
+                entered.TrySetResult(true);
+                await release.Task.WaitAsync(ct).ConfigureAwait(false);
+            };
+
+            Task<PullDcaResult> running = fixture.Create(includeSoftware: false)
+                .RunAsync(kRegistrar, request, cancellationToken: timeout.Token).AsTask();
+            try
+            {
+                await entered.Task.WaitAsync(timeout.Token).ConfigureAwait(false);
+                selectedIdentityBytes[0] = 99;
+                release.TrySetResult(true);
+                PullDcaResult result = await running.ConfigureAwait(false);
+
+                Assert.That(fixture.Host.ActivatedIdentity, Is.EqualTo(expectedIdentity));
+                Assert.That(result.Identity.SelectedIdentity, Is.EqualTo(expectedIdentity));
+            }
+            finally
+            {
+                release.TrySetResult(true);
+                timeout.Cancel();
+                await running.ConfigureAwait(false);
+            }
+        }
+
         [Test]
         public async Task NoSoftwareGateOrManagedApplicationsRequiresNoSoftwareProvider()
         {
@@ -569,6 +615,8 @@ namespace Opc.Ua.Gds.Tests.Onboarding
         [TestCase(0)]
         [TestCase(1)]
         [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
         public async Task InvalidIdentitySelectionNeverActivatesCertificateOrRequestsCredentials(int invalidSelection)
         {
             var fixture = new Fixture();
@@ -576,7 +624,9 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             {
                 0 => fixture.Connection.Selection with { SelectedIdentity = ByteString.From(new byte[] { 99 }) },
                 1 => fixture.Connection.Selection with { ApplicationId = NodeId.Null },
-                _ => fixture.Connection.Selection with { MatchingTicket = null! }
+                2 => fixture.Connection.Selection with { MatchingTicket = null! },
+                3 => fixture.Connection.Selection with { SelectedIdentity = default },
+                _ => fixture.Connection.Selection with { SelectedIdentity = ByteString.Empty }
             };
 
             ServiceResultException? error = await Assert.ThrowsAsync<ServiceResultException>(async () =>
@@ -1829,6 +1879,11 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             public PullDcaRegistrar? SoftwareRegistrar { get; private set; }
             public ByteString SigningRequest { get; set; } = kCsr;
             /// <summary>
+            /// Suspends identity activation after receiving the selected certificate.
+            /// </summary>
+            public Func<CancellationToken, Task>? ActivationWait { get; set; }
+
+            /// <summary>
             /// Gets the application identifier supplied to credential creation.
             /// </summary>
             public NodeId SigningApplicationId { get; private set; }
@@ -1842,11 +1897,14 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             public ArrayOf<PullDcaRegistrar> DiscoveredRegistrars { get; set; }
             public CancellationToken DiscoveryToken { get; private set; }
 
-            public ValueTask ActivateAsync(ByteString selectedIdentity, CancellationToken cancellationToken)
+            public async ValueTask ActivateAsync(ByteString selectedIdentity, CancellationToken cancellationToken)
             {
                 m_fixture.Record("identity", cancellationToken);
                 ActivatedIdentity = selectedIdentity;
-                return default;
+                if (ActivationWait != null)
+                {
+                    await ActivationWait(cancellationToken).ConfigureAwait(false);
+                }
             }
 
             public ValueTask CompleteAsync(

@@ -159,13 +159,20 @@ namespace Opc.Ua.Gds.Client
                 Report(progress, PullDcaStage.ProvidingIdentities);
                 PullDcaIdentitySelection identity = await connection.ProvideIdentitiesAsync(
                     request.IdentityOffer, ct).ConfigureAwait(false);
+                if (identity != null)
+                {
+                    identity = identity with
+                    {
+                        SelectedIdentity = identity.SelectedIdentity.Copy(),
+                        ApplicationId = PullDcaConnection.SnapshotNodeId(identity.ApplicationId)
+                    };
+                }
                 if (identity == null || identity.SelectedIdentity.IsEmpty ||
                     !request.IdentityOffer.Identities.Contains(identity.SelectedIdentity) ||
                     identity.ApplicationId.IsNull || identity.MatchingTicket == null)
                 {
                     throw new ServiceResultException(StatusCodes.BadSecurityChecksFailed);
                 }
-                identity = identity with { ApplicationId = PullDcaConnection.SnapshotNodeId(identity.ApplicationId) };
 
                 Report(progress, PullDcaStage.ActivatingIdentity, identity.ApplicationId);
                 await m_identityProvider.ActivateAsync(identity.SelectedIdentity, ct).ConfigureAwait(false);
