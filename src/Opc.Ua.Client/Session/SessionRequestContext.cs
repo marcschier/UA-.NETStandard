@@ -79,11 +79,12 @@ namespace Opc.Ua.Client
             {
                 throw InvalidSession();
             }
-            ValidateConfidentiality();
+            EndpointDescription endpoint = m_transport.EndpointDescription;
+            ValidateConfidentiality(endpoint);
             m_namespaceUris = session.NamespaceUris.ToArrayOf();
             m_serverUris = session.ServerUris.ToArrayOf();
             m_messageContext = new ServiceMessageContext(session.MessageContext, session.MessageContext.Telemetry);
-            m_endpoint = CoreUtils.Clone(session.ConfiguredEndpoint.Description)!;
+            m_endpoint = SnapshotEndpoint(endpoint);
             m_endpointConfiguration = CoreUtils.Clone(session.ConfiguredEndpoint.Configuration)
                 ?? EndpointConfiguration.Create();
             m_requestTransport = new RequestContextTransport(this);
@@ -127,6 +128,8 @@ namespace Opc.Ua.Client
         /// <remarks>
         /// Ordinary or custom <see cref="ISession"/> implementations are rejected: their lifecycle cannot be
         /// synchronized by this API. Custom transports must not be independently retargeted outside their owner.
+        /// The physical transport must supply an endpoint and server description. Null entries in the token policy
+        /// array are rejected.
         /// Reuse the returned <see cref="Session"/> across later cursor or handle operations; do not capture again.
         /// </remarks>
         /// <exception cref="ArgumentNullException"></exception>
@@ -270,7 +273,7 @@ namespace Opc.Ua.Client
                 throw InvalidSession();
             }
             ct.ThrowIfCancellationRequested();
-            ValidateConfidentiality();
+            ValidateConfidentiality(m_transport.EndpointDescription);
             request.RequestHeader.AuthenticationToken = m_authenticationToken;
 
             // A managed lease may wait, swap transports, retry, or reject an already completed
@@ -312,13 +315,12 @@ namespace Opc.Ua.Client
         /// Checks the physical channel, not mutable advertised session metadata, before any confidential send.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
-        private void ValidateConfidentiality()
+        private void ValidateConfidentiality(EndpointDescription? endpoint)
         {
             if (!m_requireConfidentiality)
             {
                 return;
             }
-            EndpointDescription endpoint = m_transport.EndpointDescription;
             if (endpoint == null ||
                 endpoint.SecurityMode != MessageSecurityMode.SignAndEncrypt ||
                 string.IsNullOrEmpty(endpoint.SecurityPolicyUri) ||
@@ -328,6 +330,68 @@ namespace Opc.Ua.Client
                     StatusCodes.BadSecurityModeInsufficient,
                     "Confidential method arguments require an encrypted channel.");
             }
+        }
+
+        /// <summary>
+        /// Captures the transport endpoint without invoking provider clone overrides.
+        /// </summary>
+        private static EndpointDescription SnapshotEndpoint(EndpointDescription? source)
+        {
+            if (source == null)
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadSecurityChecksFailed, "The captured transport has no endpoint description.");
+            }
+
+            ApplicationDescription application = source.Server ??
+                throw new ServiceResultException(
+                    StatusCodes.BadSecurityChecksFailed, "The captured endpoint has no server description.");
+            ArrayOf<string> discoveryUrls = application.DiscoveryUrls;
+            ArrayOf<LocalizedText> names = application.ApplicationNames;
+            LocalizedText[] copiedNames = names.Span.ToArray();
+            for (int i = 0; i < copiedNames.Length; i++)
+            {
+                copiedNames[i] = copiedNames[i].Copy();
+            }
+            ArrayOf<UserTokenPolicy> sourcePolicies = source.UserIdentityTokens;
+            var policies = new UserTokenPolicy[sourcePolicies.Count];
+            for (int i = 0; i < policies.Length; i++)
+            {
+                UserTokenPolicy policy = sourcePolicies[i] ??
+                    throw new ServiceResultException(
+                        StatusCodes.BadSecurityChecksFailed, "The captured endpoint has an invalid token policy.");
+                policies[i] = new UserTokenPolicy
+                {
+                    PolicyId = policy.PolicyId,
+                    TokenType = policy.TokenType,
+                    IssuedTokenType = policy.IssuedTokenType,
+                    IssuerEndpointUrl = policy.IssuerEndpointUrl,
+                    SecurityPolicyUri = policy.SecurityPolicyUri
+                };
+            }
+
+            ByteString certificate = source.ServerCertificate;
+            return new EndpointDescription
+            {
+                EndpointUrl = source.EndpointUrl,
+                Server = new ApplicationDescription
+                {
+                    ApplicationUri = application.ApplicationUri,
+                    ProductUri = application.ProductUri,
+                    ApplicationNames = names.IsNull ? default : copiedNames.ToArrayOf(),
+                    ApplicationType = application.ApplicationType,
+                    GatewayServerUri = application.GatewayServerUri,
+                    DiscoveryProfileUri = application.DiscoveryProfileUri,
+                    DiscoveryUrls = discoveryUrls.IsNull ? default : discoveryUrls.Span.ToArray().ToArrayOf()
+                },
+                ServerCertificate = certificate.IsNull ? default : ByteString.From(certificate.Span),
+                SecurityMode = source.SecurityMode,
+                SecurityPolicyUri = source.SecurityPolicyUri,
+                UserIdentityTokens = sourcePolicies.IsNull ? default : policies.ToArrayOf(),
+                TransportProfileUri = source.TransportProfileUri,
+                SecurityLevel = source.SecurityLevel,
+                ProxyUrl = source.ProxyUrl
+            };
         }
 
         /// <summary>

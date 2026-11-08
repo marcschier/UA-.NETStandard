@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -199,6 +200,221 @@ namespace Opc.Ua.Client.Tests.SessionContexts
                 async () => await request.ConfigureAwait(false)))!;
             Assert.That(failure.StatusCode, Is.EqualTo(StatusCodes.BadSessionIdInvalid));
             Assert.That(context.Session.NamespaceUris.GetString(1), Is.EqualTo("urn:request-context:original"));
+            Assert.That(fixture.Requests, Is.Empty);
+        }
+
+        /// <summary>
+        /// The captured endpoint uses physical metadata and does not invoke provider clone overrides.
+        /// </summary>
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task CapturedTransportEndpointKeepsPhysicalIdentity(bool confidential)
+        {
+            await using var fixture = new SessionRequestContextTestContext(
+                securityMode: MessageSecurityMode.SignAndEncrypt);
+            byte[] serverCertificate = [1, 2, 3];
+            string[] discoveryUrls = ["opc.tcp://physical:4840"];
+            var translations = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["en"] = "Physical {0}",
+                ["de"] = "Physisch {0}"
+            };
+            object[] arguments = ["server"];
+            var application = new ProviderApplicationDescription
+            {
+                ApplicationUri = "urn:physical:server",
+                ProductUri = "urn:physical:product",
+                ApplicationNames =
+                [
+                    new LocalizedText(translations,
+                        new TranslationInfo("physical-name", "en", "Physical {0}", arguments)),
+                    new LocalizedText("Second name")
+                ],
+                DiscoveryUrls = discoveryUrls
+            };
+            var policy = new ProviderUserTokenPolicy
+            {
+                PolicyId = "physical-token",
+                TokenType = UserTokenType.UserName,
+                SecurityPolicyUri = SecurityPolicies.Basic256Sha256
+            };
+            var endpoint = new ProviderEndpointDescription
+            {
+                EndpointUrl = "opc.tcp://physical:4840",
+                Server = application,
+                ServerCertificate = ByteString.From(serverCertificate),
+                SecurityMode = MessageSecurityMode.SignAndEncrypt,
+                SecurityPolicyUri = SecurityPolicies.Basic256Sha256,
+                UserIdentityTokens = new UserTokenPolicy[] { policy },
+                TransportProfileUri = Profiles.UaTcpTransport,
+                SecurityLevel = 5
+            };
+            fixture.Channel.SetupGet(channel => channel.EndpointDescription).Returns(endpoint);
+
+            await using SessionRequestContext context = confidential
+                ? await SessionRequestContext.CaptureConfidentialAsync(fixture.ManagedSession)
+                    .ConfigureAwait(false)
+                : await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
+            EndpointDescription captured = context.Session.TransportChannel.EndpointDescription;
+            endpoint.EndpointUrl = "opc.tcp://changed:4840";
+            application.ApplicationUri = "urn:changed:server";
+            discoveryUrls[0] = "opc.tcp://changed:4840";
+            policy.PolicyId = "changed-token";
+            serverCertificate[0] = 9;
+            translations["en"] = "Changed {0}";
+            translations["de"] = "Changed {0}";
+            arguments[0] = "changed";
+
+            Assert.That(fixture.ManagedSession.ConfiguredEndpoint.Description.EndpointUrl,
+                Is.EqualTo("opc.tcp://localhost:4840"));
+            Assert.That(captured, Is.Not.SameAs(endpoint));
+            Assert.That(captured.Server, Is.Not.SameAs(application));
+            Assert.That(captured.UserIdentityTokens[0], Is.Not.SameAs(policy));
+            Assert.That(captured.EndpointUrl, Is.EqualTo("opc.tcp://physical:4840"));
+            Assert.That(captured.Server.ApplicationUri, Is.EqualTo("urn:physical:server"));
+            Assert.That(captured.Server.ProductUri, Is.EqualTo("urn:physical:product"));
+            Assert.That(captured.Server.ApplicationNames.Count, Is.EqualTo(2));
+            Assert.That(captured.Server.ApplicationNames[0].FilterByPreferredLocales(["en"]).Text,
+                Is.EqualTo("Physical server"));
+            Assert.That(captured.Server.ApplicationNames[0].FilterByPreferredLocales(["de"]).Text,
+                Is.EqualTo("Physisch server"));
+            Assert.That(captured.Server.ApplicationNames[1].Text, Is.EqualTo("Second name"));
+            Assert.That(captured.Server.DiscoveryUrls[0], Is.EqualTo("opc.tcp://physical:4840"));
+            Assert.That(captured.ServerCertificate.ToArray(), Is.EqualTo(new byte[] { 1, 2, 3 }));
+            Assert.That(captured.UserIdentityTokens[0].PolicyId, Is.EqualTo("physical-token"));
+            Assert.That(captured.SecurityMode, Is.EqualTo(MessageSecurityMode.SignAndEncrypt));
+            Assert.That(captured.SecurityPolicyUri, Is.EqualTo(SecurityPolicies.Basic256Sha256));
+            Assert.That(captured.TransportProfileUri, Is.EqualTo(Profiles.UaTcpTransport));
+            Assert.That(captured.SecurityLevel, Is.EqualTo(5));
+        }
+
+        /// <summary>
+        /// Unsupported nested name ownership rejects capture without sending a service request.
+        /// </summary>
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task CapturedEndpointRejectsUnsupportedApplicationNameCopy(bool confidential)
+        {
+            await using var fixture = new SessionRequestContextTestContext(
+                securityMode: MessageSecurityMode.SignAndEncrypt);
+            var endpoint = new EndpointDescription
+            {
+                SecurityMode = MessageSecurityMode.SignAndEncrypt,
+                SecurityPolicyUri = SecurityPolicies.Basic256Sha256,
+                Server = new ApplicationDescription
+                {
+                    ApplicationNames =
+                    [
+                        new LocalizedText(new SortedDictionary<string, string> { ["en"] = "Physical server" })
+                    ]
+                }
+            };
+            fixture.Channel.SetupGet(channel => channel.EndpointDescription).Returns(endpoint);
+            ServiceResultException? failure = await Assert.ThrowsAsync<ServiceResultException>(async () =>
+            {
+                await using SessionRequestContext context = confidential
+                    ? await SessionRequestContext.CaptureConfidentialAsync(fixture.ManagedSession).ConfigureAwait(false)
+                    : await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
+            }).ConfigureAwait(false);
+            Assert.That(failure!.StatusCode, Is.EqualTo(StatusCodes.BadNotSupported));
+            Assert.That(fixture.Requests, Is.Empty);
+        }
+
+        /// <summary>
+        /// A channel without an endpoint description cannot supply transport identity.
+        /// </summary>
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task CapturingChannelWithoutEndpointIsRejected(bool confidential)
+        {
+            await using var fixture = new SessionRequestContextTestContext(
+                securityMode: MessageSecurityMode.SignAndEncrypt);
+            fixture.Channel.SetupGet(channel => channel.EndpointDescription).Returns((EndpointDescription)null!);
+
+            ServiceResultException failure = (await Assert.ThrowsAsync<ServiceResultException>(async () =>
+            {
+                await using SessionRequestContext context = confidential
+                    ? await SessionRequestContext.CaptureConfidentialAsync(fixture.ManagedSession).ConfigureAwait(false)
+                    : await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
+            }))!;
+
+            Assert.That(failure.StatusCode, Is.EqualTo(confidential
+                ? StatusCodes.BadSecurityModeInsufficient
+                : StatusCodes.BadSecurityChecksFailed));
+            Assert.That(fixture.Requests, Is.Empty);
+        }
+
+        /// <summary>
+        /// Capture preserves collection values after generated setters normalize null arrays to empty.
+        /// </summary>
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task CapturedEndpointPreservesNormalizedCollectionValues(bool empty)
+        {
+            await using var fixture = new SessionRequestContextTestContext();
+            var endpoint = new EndpointDescription
+            {
+                Server = new ApplicationDescription
+                {
+                    DiscoveryUrls = empty ? ArrayOf<string>.Empty : ArrayOf<string>.Null
+                },
+                ServerCertificate = empty ? ByteString.Empty : default,
+                UserIdentityTokens = empty ? ArrayOf<UserTokenPolicy>.Empty : ArrayOf<UserTokenPolicy>.Null
+            };
+            fixture.Channel.SetupGet(channel => channel.EndpointDescription).Returns(endpoint);
+
+            await using SessionRequestContext context =
+                await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
+            EndpointDescription captured = context.Session.TransportChannel.EndpointDescription;
+
+            Assert.That(endpoint.Server.DiscoveryUrls.IsNull, Is.False);
+            Assert.That(endpoint.UserIdentityTokens.IsNull, Is.False);
+            Assert.That(captured.Server.DiscoveryUrls.IsNull, Is.False);
+            Assert.That(captured.ServerCertificate.IsNull, Is.EqualTo(!empty));
+            Assert.That(captured.UserIdentityTokens.IsNull, Is.False);
+            Assert.That(captured.Server.DiscoveryUrls.Count, Is.Zero);
+            Assert.That(captured.ServerCertificate.Length, Is.Zero);
+            Assert.That(captured.UserIdentityTokens.Count, Is.Zero);
+        }
+
+        /// <summary>
+        /// A null token policy is rejected during capture.
+        /// </summary>
+        [Test]
+        public async Task CapturingEndpointWithNullTokenPolicyIsRejected()
+        {
+            await using var fixture = new SessionRequestContextTestContext();
+            var endpoint = new EndpointDescription();
+            endpoint.UserIdentityTokens = new UserTokenPolicy[] { null! };
+            fixture.Channel.SetupGet(channel => channel.EndpointDescription).Returns(endpoint);
+
+            ServiceResultException failure = (await Assert.ThrowsAsync<ServiceResultException>(async () =>
+            {
+                await using SessionRequestContext context =
+                    await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
+            }))!;
+
+            Assert.That(failure.StatusCode, Is.EqualTo(StatusCodes.BadSecurityChecksFailed));
+            Assert.That(fixture.Requests, Is.Empty);
+        }
+
+        /// <summary>
+        /// A null server assignment is normalized by the generated setter before the physical endpoint is captured.
+        /// </summary>
+        [Test]
+        public async Task CapturedEndpointCopiesNormalizedServerDescription()
+        {
+            await using var fixture = new SessionRequestContextTestContext();
+            var endpoint = new EndpointDescription { Server = null! };
+            fixture.Channel.SetupGet(channel => channel.EndpointDescription).Returns(endpoint);
+            Assert.That(endpoint.Server, Is.Not.Null);
+
+            await using SessionRequestContext context =
+                await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
+            EndpointDescription captured = context.Session.TransportChannel.EndpointDescription;
+
+            Assert.That(captured.Server, Is.Not.SameAs(endpoint.Server));
+            Assert.That(captured.Server.ApplicationUri, Is.EqualTo(endpoint.Server.ApplicationUri));
             Assert.That(fixture.Requests, Is.Empty);
         }
 
@@ -463,6 +679,42 @@ namespace Opc.Ua.Client.Tests.SessionContexts
                 TimestampsToReturn.Both, false,
                 [new HistoryReadValueId { NodeId = new NodeId(3u, 1), ContinuationPoint = ByteString.From("point"u8) }],
                 CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Represents endpoint metadata whose provider does not implement a detached clone.
+        /// </summary>
+        private sealed class ProviderEndpointDescription : EndpointDescription
+        {
+            /// <inheritdoc/>
+            public override object Clone()
+            {
+                throw new AssertionException("Provider endpoint clones must not be invoked.");
+            }
+        }
+
+        /// <summary>
+        /// Represents application metadata whose provider does not implement a detached clone.
+        /// </summary>
+        private sealed class ProviderApplicationDescription : ApplicationDescription
+        {
+            /// <inheritdoc/>
+            public override object Clone()
+            {
+                throw new AssertionException("Provider application clones must not be invoked.");
+            }
+        }
+
+        /// <summary>
+        /// Represents token policy metadata whose provider does not implement a detached clone.
+        /// </summary>
+        private sealed class ProviderUserTokenPolicy : UserTokenPolicy
+        {
+            /// <inheritdoc/>
+            public override object Clone()
+            {
+                throw new AssertionException("Provider token policy clones must not be invoked.");
+            }
         }
     }
 }
