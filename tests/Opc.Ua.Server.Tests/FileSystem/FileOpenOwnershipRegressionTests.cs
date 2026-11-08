@@ -46,6 +46,116 @@ namespace Opc.Ua.Server.Tests.FileSystem
     public sealed class FileOpenOwnershipRegressionTests
     {
         /// <summary>
+        /// Read with Append starts at EOF, reports that position, and permits rewinding without opening for write.
+        /// </summary>
+        [TestCase(false, false)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        [TestCase(true, true)]
+        public async Task ReadAppendReportsEofAndReadsAfterRewindAsync(bool synchronousOpen, bool emptyFile)
+        {
+            using var harness = new FileHarness();
+            byte[] content = emptyFile ? [] : [10, 20, 30, 40];
+            harness.Provider.SetupGet(value => value.IsWritable).Returns(false);
+            harness.Provider.Setup(value => value.OpenReadAsync("file", It.IsAny<CancellationToken>()))
+                .Returns(() => new ValueTask<Stream>(new MemoryStream(content, writable: false)));
+            uint id;
+            if (synchronousOpen)
+            {
+                ServiceResult opened = harness.GetHandle().Open(harness.SessionId, 0x09, out id);
+                Assert.That(opened.StatusCode, Is.EqualTo(StatusCodes.Good));
+                Assert.That(id, Is.Not.Zero);
+            }
+            else
+            {
+                id = await FileReadRegressionTests.OpenAsync(
+                    harness.File, harness.Manager.SystemContext, 0x09).ConfigureAwait(false);
+            }
+            Assert.That(harness.GetHandle().OpenCount, Is.EqualTo(1));
+            (ServiceResult positionResult, List<Variant> positionOutput) = await FileReadRegressionTests.CallAsync(
+                harness.File.GetPosition!, harness.Manager.SystemContext, harness.File.NodeId, [id])
+                .ConfigureAwait(false);
+            Assert.That(positionResult.StatusCode, Is.EqualTo(StatusCodes.Good));
+            Assert.That(positionOutput, Has.Count.EqualTo(1));
+            Assert.That(positionOutput[0].TryGetValue(out ulong position), Is.True);
+            Assert.That(position, Is.EqualTo((ulong)content.Length));
+
+            (ServiceResult eofResult, List<Variant> eofOutput) = await FileReadRegressionTests.CallAsync(
+                harness.File.Read!, harness.Manager.SystemContext, harness.File.NodeId, [id, 4])
+                .ConfigureAwait(false);
+            Assert.That(eofResult.StatusCode, Is.EqualTo(StatusCodes.Good));
+            Assert.That(eofOutput, Has.Count.EqualTo(1));
+            Assert.That(eofOutput[0].TryGetValue(out ByteString eof), Is.True);
+            Assert.That(eof.IsEmpty, Is.True);
+
+            (ServiceResult rewindResult, _) = await FileReadRegressionTests.CallAsync(
+                harness.File.SetPosition!, harness.Manager.SystemContext, harness.File.NodeId, [id, 0ul])
+                .ConfigureAwait(false);
+            Assert.That(rewindResult.StatusCode, Is.EqualTo(StatusCodes.Good));
+            Assert.That(harness.GetHandle().GetStream(harness.SessionId, id)!.Position, Is.Zero);
+            (ServiceResult readResult, List<Variant> readOutput) = await FileReadRegressionTests.CallAsync(
+                harness.File.Read!, harness.Manager.SystemContext, harness.File.NodeId, [id, 4])
+                .ConfigureAwait(false);
+            Assert.That(readResult.StatusCode, Is.EqualTo(StatusCodes.Good));
+            Assert.That(readOutput, Has.Count.EqualTo(1));
+            Assert.That(readOutput[0].TryGetValue(out ByteString data), Is.True);
+            Assert.That(data, Is.EqualTo(ByteString.From(content.AsSpan())));
+            harness.Provider.Verify(value => value.OpenWriteAsync(
+                It.IsAny<string>(), It.IsAny<FileWriteMode>(), It.IsAny<CancellationToken>()), Times.Never);
+            Assert.That(await harness.GetHandle().CloseAsync(harness.SessionId, id).ConfigureAwait(false), Is.True);
+            Assert.That(harness.GetHandle().OpenCount, Is.Zero);
+        }
+
+        /// <summary>
+        /// Failed EOF positioning disposes the stream without retaining its open reservation.
+        /// </summary>
+        [TestCase(false, false)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        [TestCase(true, true)]
+        public async Task ReadAppendPositionFailureReleasesStreamAndReservationAsync(
+            bool synchronousOpen, bool seekFailure)
+        {
+            using var harness = new FileHarness();
+            var stream = new Mock<MemoryStream> { CallBase = true };
+            if (seekFailure)
+            {
+                stream.Setup(value => value.Seek(0, SeekOrigin.End)).Throws(new IOException("seek failed"));
+            }
+            else
+            {
+                stream.SetupGet(value => value.CanSeek).Returns(false);
+            }
+            harness.Provider.Setup(value => value.OpenReadAsync("file", It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<Stream>(stream.Object));
+
+            ServiceResult result;
+            uint id;
+            if (synchronousOpen)
+            {
+                result = harness.GetHandle().Open(harness.SessionId, 0x09, out id);
+            }
+            else
+            {
+                (result, id) = await harness.GetHandle()
+                    .OpenAsync(harness.SessionId, 0x09, CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.That(result.StatusCode,
+                Is.EqualTo(seekFailure ? StatusCodes.BadInvalidState : StatusCodes.BadNotSupported));
+            Assert.That(id, Is.Zero);
+            Assert.That(stream.Object.CanRead, Is.False);
+            Assert.That(harness.GetHandle().OpenCount, Is.Zero);
+            harness.Provider.Setup(value => value.OpenReadAsync("file", It.IsAny<CancellationToken>()))
+                .Returns(() => new ValueTask<Stream>(new MemoryStream(new byte[4], writable: false)));
+            (ServiceResult next, uint nextId) = await harness.GetHandle()
+                .OpenAsync(harness.SessionId, 0x09, CancellationToken.None).ConfigureAwait(false);
+            Assert.That(next.StatusCode, Is.EqualTo(StatusCodes.Good));
+            Assert.That(nextId, Is.Not.Zero);
+            Assert.That(harness.GetHandle().GetStream(harness.SessionId, nextId)!.Position, Is.EqualTo(4));
+        }
+
+        /// <summary>
         /// Verifies that an existing reader or writer rejects an erase-open before the destructive provider is invoked.
         /// </summary>
         [TestCase(false)]
