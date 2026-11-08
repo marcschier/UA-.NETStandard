@@ -560,6 +560,33 @@ namespace Opc.Ua.Pumps.Tests
         }
 
         /// <summary>
+        /// Removing the Machines folder withdraws the profile even when the pump remains registered.
+        /// </summary>
+        [Test]
+        public async Task PumpBaseProfileWithdrawsWhenMachinesFolderIsRemovedAsync()
+        {
+            SetServerProfiles(PumpBaseServerProfilePrerequisites);
+            IPumpBuilder pump = await CreateAsync("MachinesFolderRemoved");
+            pump.Identification.Set(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri,
+                Variant.From("urn:example:pump:machines-folder-removed"));
+            await m_fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                pump, PersistentStore().Object, WritableIdentityPermissions);
+            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+
+            NodeId machinesId = NodeId.Create(
+                Opc.Ua.Machinery.Objects.Machines,
+                Opc.Ua.Machinery.Namespaces.Machinery,
+                m_fixture.Server.NamespaceUris);
+            Assert.That(await m_fixture.Manager.DeleteNodeAsync(
+                m_fixture.Manager.SystemContext, machinesId, CancellationToken.None), Is.True);
+            Assert.That(m_fixture.Manager.FindPredefinedNode(machinesId), Is.Null);
+            Assert.That(m_fixture.Manager.FindPredefinedNode(pump.NodeId), Is.SameAs(pump.Pump));
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.False);
+        }
+
+        /// <summary>
         /// The identification AddIn reference must point from the pump to its identification node.
         /// </summary>
         [Test]
