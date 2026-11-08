@@ -1,0 +1,70 @@
+name: Vision idle-handle Windows diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    name: Windows ${{ matrix.framework }}
+    runs-on: windows-2025
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [net48, net10.0]
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      MSBUILDDISABLENODEREUSE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Verify provisional source
+        shell: pwsh
+        run: |
+          $source = '42b29311caf0e8926ade43c427ad30c8d7c11f99'
+          $changes = @(git diff --name-only $source HEAD)
+          if ($LASTEXITCODE -ne 0) { throw 'Source comparison failed.' }
+          $unexpected = @($changes | Where-Object { -not $_.StartsWith('.github/workflows/') })
+          if ($unexpected.Count) { throw "Unexpected source changes: $unexpected" }
+          git rev-parse HEAD
+          git diff --stat $source HEAD
+          "Provisional source: $source. Passing tests do not resolve the linked-token disposal race." |
+            Out-File -Append -FilePath $env:GITHUB_STEP_SUMMARY
+      - name: FileHandle and FileTypeBinder lifetime controls
+        shell: pwsh
+        run: |
+          & .\.github\scripts\run-dotnet-tests.ps1 `
+            -Projects 'tests\Opc.Ua.Server.Tests\Opc.Ua.Server.Tests.csproj' `
+            -CustomTestTarget '${{ matrix.framework }}' -Framework '${{ matrix.framework }}' `
+            -Configuration Debug `
+            -Filter 'FullyQualifiedName~Opc.Ua.Server.Tests.FileSystem.FileHandleLifetimeRegressionTests|FullyQualifiedName~Opc.Ua.Server.Tests.FileSystem.FileTypeBinderLifetimeTests' `
+            -HangTimeout '3m' -PerProjectTimeoutMinutes 10 `
+            -ResultsDirectory 'artifacts\vision-idle\controls' -QuietOutput
+      - name: Original Vision shared-binding regressions
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          & .\.github\scripts\run-dotnet-tests.ps1 `
+            -Projects 'tests\Opc.Ua.Vision.Tests\Opc.Ua.Vision.Tests.csproj' `
+            -CustomTestTarget '${{ matrix.framework }}' -Framework '${{ matrix.framework }}' `
+            -Configuration Debug `
+            -Filter 'FullyQualifiedName~Opc.Ua.Vision.Tests.MachineVisionRuntimeTests.SharedFileBindingReleasesClosedSessionHandlesAsync|FullyQualifiedName~Opc.Ua.Vision.Tests.MachineVisionRuntimeTests.SharedFileBindingIsolatesReadersAndCommitsOneWriterAsync' `
+            -HangTimeout '3m' -PerProjectTimeoutMinutes 10 `
+            -ResultsDirectory 'artifacts\vision-idle\vision' -QuietOutput
+      - name: Preserve TRX, logs, and verdicts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vision-idle-windows-${{ matrix.framework }}
+          path: artifacts\vision-idle
+          if-no-files-found: error
+          retention-days: 14
