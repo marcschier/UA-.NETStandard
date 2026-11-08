@@ -911,7 +911,7 @@ server profiles (§9.2, Tables 153–155). It defines no client facets.
 
 | Profile | URI | Status |
 | --- | --- | --- |
-| Pump Base Server Profile (Table 154) | `http://opcfoundation.org/UA-Profile/Pumps/Server/Base` | Advertised when every current pump has writable Machinery identification and the required inherited server profiles are present |
+| Pump Base Server Profile (Table 154) | `http://opcfoundation.org/UA-Profile/Pumps/Server/Base` | Advertised when every current pump is organized from Machinery `Machines`, has persistently bound writable Machinery identification, and the required inherited server profiles are present |
 | Pump Advanced Server Profile (Table 155) | `http://opcfoundation.org/UA-Profile/Pumps/Server/Advanced` | Advertised when Pump Base and every required inherited Advanced server profile are present |
 
 The owner computes these profiles from the current registered pumps and the
@@ -958,8 +958,12 @@ CAS Base or add its CAS-specific requirements.
 
 Pump Base requires the Embedded 2017 UA Server, Data Access, ComplexType 2017,
 and Aggregate Subscription profiles from Table 154. It also requires every
-current pump to have complete writable Machinery identification. The runtime
-keeps the Pumps NodeSet declaration unchanged and uses `HasAddIn` for the
+current pump to be organized from the Machinery `Machines` folder and to have
+complete writable Machinery identification backed by a persistent AMB binding.
+Changing `ProductInstanceUri` after binding withdraws the profile because the
+retained binding remains keyed by the original value. Restoring that value
+restores eligibility. The runtime keeps the Pumps NodeSet declaration unchanged
+and uses `HasAddIn` for the
 instance identification edge; `HasAddIn` is a subtype of the declared
 `HasComponent` reference and satisfies Machinery's identification relationship.
 The writable `AssetId`, `ComponentName` and `Location` members are enabled by
@@ -1012,7 +1016,7 @@ The rows below follow the specification's structure.
 | Area | Status | Source | Tests |
 | --- | --- | --- | --- |
 | `PumpType` instance below `DeviceSet` with its own instance NodeIds | ✅ | [`PumpsNodeManager`](../src/Opc.Ua.Pumps.Server/PumpsNodeManager.cs) | `PumpsNodeManagerTests`; `PumpsClientServerE2eTests` |
-| Organized from the Machinery `Machines` folder, optional | ✅ | same | `PumpsNodeManagerTests`; `PumpsClientServerE2eTests` |
+| Organized from the Machinery `Machines` folder, optional for the model but required for Pump Base profile advertisement | ✅ | same | `PumpsNodeManagerTests`; `PumpsConformanceTests` |
 | Duplicate pump names rejected | 🧪 | same | `PumpsNodeManagerTests` |
 | Pump is an event notifier | 🧪 | same | `PumpsNodeManagerTests` |
 | Lazy materialisation of groups and leaves | 🧪 | [`PumpGroupBuilder`](../src/Opc.Ua.Pumps.Server/Builders/PumpGroupBuilder.cs) | `PumpBuilderTests` |

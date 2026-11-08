@@ -347,6 +347,59 @@ namespace Opc.Ua.Pumps.Tests
         }
 
         /// <summary>
+        /// Pump Base requires each retained identity to keep its original ProductInstanceUri.
+        /// </summary>
+        [Test]
+        public async Task PumpBaseProfileWithdrawsWhenRetainedProductInstanceUriChangesAsync()
+        {
+            SetServerProfiles(PumpBaseServerProfilePrerequisites);
+            IPumpBuilder pump = await CreateAsync("ChangedProductInstanceUri");
+            const string originalUri = "urn:example:pump:changed-identity";
+            pump.Identification.Set(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri,
+                Variant.From(originalUri));
+            await m_fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                pump, PersistentStore().Object, WritableIdentityPermissions);
+
+            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+
+            var identity = (BaseVariableState)pump.Identification.Child(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri)!;
+            identity.WrappedValue = Variant.From("urn:example:pump:changed-identity-replacement");
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.False);
+
+            identity.WrappedValue = Variant.From(originalUri);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+        }
+
+        /// <summary>
+        /// Pump Base requires the actual Machinery Machines relationship, not only identity configuration.
+        /// </summary>
+        [Test]
+        public async Task PumpBaseProfileRequiresMachinesFolderMembershipAsync()
+        {
+            await using var fixture = new PumpsServerFixture();
+            await fixture.StartAsync(new PumpsServerOptions
+            {
+                OrganizeIntoMachinesFolder = false
+            });
+            fixture.Server.ServerObject.ServerCapabilities!.ServerProfileArray!.Value =
+                PumpBaseServerProfilePrerequisites;
+
+            IPumpBuilder pump = await fixture.Manager.CreatePumpAsync(fixture.PumpName("NotInMachinesFolder"));
+            pump.Identification.Set(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri,
+                Variant.From("urn:example:pump:not-in-machines"));
+            await fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                pump, PersistentStore().Object, WritableIdentityPermissions);
+
+            Assert.That(Advertises(
+                new PumpsConformance(fixture.Manager.Runtime).ServerProfiles,
+                PumpBaseServerProfile), Is.False);
+        }
+
+        /// <summary>
         /// Creates a pump without selecting optional groups or runtime services.
         /// </summary>
         private ValueTask<IPumpBuilder> CreateAsync(string name)
