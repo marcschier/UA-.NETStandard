@@ -46,6 +46,7 @@ jobs:
             Get-Content -Path $log
             exit $code
           }
+          exit 0
 
       - name: Restore missing assets
         if: steps.assets.outputs.restore_required == 'true'
