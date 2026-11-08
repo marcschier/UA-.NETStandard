@@ -204,6 +204,78 @@ namespace Opc.Ua.Server.Tests.FileSystem
         }
 
         /// <summary>
+        /// Inline cleanup retains an open until the provider's linked cancellation token is detached.
+        /// </summary>
+        [Test]
+        public async Task InlineSessionClosureWaitsForProviderTokenDetachmentAsync()
+        {
+            using var releaseSeek = new ManualResetEventSlim();
+            using var releaseCallback = new ManualResetEventSlim();
+            using var requestCancellation = new CancellationTokenSource();
+            using var stream = new SuspendedSeekStream(releaseSeek);
+            Mock<IFileSystemReadWriteProvider> provider = Provider(stream);
+            var callbackEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            CancellationTokenRegistration registration = default;
+            provider.Setup(value => value.OpenReadWriteAsync(
+                "file", It.IsAny<FileWriteMode>(), It.IsAny<CancellationToken>()))
+                .Returns((string _, FileWriteMode _, CancellationToken token) =>
+                {
+                    registration = token.Register(() =>
+                    {
+                        callbackEntered.TrySetResult(true);
+                        if (!releaseCallback.Wait(TimeSpan.FromSeconds(10)))
+                        {
+                            throw new TimeoutException("The test did not release the provider cancellation callback.");
+                        }
+                    });
+                    return new ValueTask<Stream>(stream);
+                });
+            await using var handles = new FileHandle(provider.Object, "file");
+            Task<(ServiceResult Result, uint Handle)> open = Task.Run(async () =>
+                await handles.OpenAsync(s_session, 3, requestCancellation.Token).ConfigureAwait(false));
+            Task? cancel = null;
+            try
+            {
+                Thread openingThread = await stream.SeekEntered.Task.WaitAsync(TimeSpan.FromSeconds(5))
+                    .ConfigureAwait(false);
+                cancel = Task.Run(() => requestCancellation.Cancel());
+                await callbackEntered.Task.WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                releaseSeek.Set();
+                await stream.SeekExited.Task.WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                await WaitForBlockedThreadAsync(openingThread).ConfigureAwait(false);
+                Assert.That(open.IsCompleted, Is.False);
+
+                handles.CloseSession(s_session, defer: false);
+
+                Assert.That(stream.CanRead, Is.True);
+                Assert.That(handles.TryBlockOpens(), Is.False);
+                (ServiceResult blocked, _) = await handles.OpenAsync(s_other, 1, CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(blocked.StatusCode, Is.EqualTo(StatusCodes.BadNotReadable));
+            }
+            finally
+            {
+                releaseSeek.Set();
+                releaseCallback.Set();
+                try
+                {
+                    await Task.WhenAll(cancel ?? Task.CompletedTask, open).WaitAsync(TimeSpan.FromSeconds(5))
+                        .ConfigureAwait(false);
+                }
+                finally
+                {
+                    registration.Dispose();
+                }
+            }
+            (ServiceResult opened, _) = await open.ConfigureAwait(false);
+            Assert.That(opened.StatusCode, Is.EqualTo(StatusCodes.Good));
+            await handles.CleanupCompletion.WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            Assert.That(stream.CanRead, Is.False);
+            Assert.That(handles.TryBlockOpens(), Is.True);
+            handles.UnblockOpens();
+        }
+
+        /// <summary>
         /// Inline lifecycle cleanup still cancels active work and retains its reservation until it drains.
         /// </summary>
         [Test]
@@ -374,8 +446,9 @@ namespace Opc.Ua.Server.Tests.FileSystem
         /// <summary>
         /// A cancellation-ignoring provider open retains exclusivity until its late stream has been disposed.
         /// </summary>
-        [Test]
-        public async Task PendingOpenKeepsWriterReservedUntilLateStreamCleanupAsync()
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task PendingOpenKeepsWriterReservedUntilLateStreamCleanupAsync(bool useInlineClose)
         {
             var release = new TaskCompletionSource<Stream>(TaskCreationOptions.RunContinuationsAsynchronously);
             using var stream = new MemoryStream(new byte[4], writable: true);
@@ -388,7 +461,14 @@ namespace Opc.Ua.Server.Tests.FileSystem
                 .AsTask();
             try
             {
-                await handles.CloseSessionAsync(s_session).ConfigureAwait(false);
+                if (useInlineClose)
+                {
+                    handles.CloseSession(s_session, defer: false);
+                }
+                else
+                {
+                    await handles.CloseSessionAsync(s_session).ConfigureAwait(false);
+                }
                 Assert.That(handles.TryBlockOpens(), Is.False);
                 (ServiceResult blocked, _) = await handles.OpenAsync(s_other, 7, CancellationToken.None)
                     .ConfigureAwait(false);
@@ -465,8 +545,9 @@ namespace Opc.Ua.Server.Tests.FileSystem
         /// <summary>
         /// An opt-in provider that cooperates with cancellation does not resurrect a session-owned open.
         /// </summary>
-        [Test]
-        public async Task CooperativePendingOpenCancellationReturnsSessionClosedAsync()
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task CooperativePendingOpenCancellationReturnsSessionClosedAsync(bool useInlineClose)
         {
             Mock<IFileSystemReadWriteProvider> provider = Provider(Stream.Null);
             provider.Setup(value => value.OpenReadWriteAsync(
@@ -476,7 +557,14 @@ namespace Opc.Ua.Server.Tests.FileSystem
             await using var handles = new FileHandle(provider.Object, "file");
             Task<(ServiceResult Result, uint Handle)> open = handles.OpenAsync(s_session, 3, CancellationToken.None)
                 .AsTask();
-            await handles.CloseSessionAsync(s_session).ConfigureAwait(false);
+            if (useInlineClose)
+            {
+                handles.CloseSession(s_session, defer: false);
+            }
+            else
+            {
+                await handles.CloseSessionAsync(s_session).ConfigureAwait(false);
+            }
             (ServiceResult result, uint id) = await open.ConfigureAwait(false);
             Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.BadSessionClosed));
             Assert.That(id, Is.Zero);
@@ -543,6 +631,22 @@ namespace Opc.Ua.Server.Tests.FileSystem
 #endif
 
         /// <summary>
+        /// Waits until the opening thread blocks while detaching its linked token.
+        /// </summary>
+        private static async Task WaitForBlockedThreadAsync(Thread thread)
+        {
+            for (int attempt = 0; attempt < 500; attempt++)
+            {
+                if ((thread.ThreadState & ThreadState.WaitSleepJoin) != 0)
+                {
+                    return;
+                }
+                await Task.Delay(10).ConfigureAwait(false);
+            }
+            Assert.Fail("The provider-open token was not blocked in detachment.");
+        }
+
+        /// <summary>
         /// Suspends a provider open until its cancellation token is requested.
         /// </summary>
         private static async Task<Stream> WaitForCancellationAsync(CancellationToken ct)
@@ -562,6 +666,53 @@ namespace Opc.Ua.Server.Tests.FileSystem
                     "file", It.IsAny<FileWriteMode>(), It.IsAny<CancellationToken>()))
                 .Returns(new ValueTask<Stream>(stream));
             return provider;
+        }
+
+        /// <summary>
+        /// Pauses stream validation on the opening thread.
+        /// </summary>
+        private sealed class SuspendedSeekStream : MemoryStream
+        {
+            /// <summary>
+            /// Creates a stream controlled by the supplied seek gate.
+            /// </summary>
+            public SuspendedSeekStream(ManualResetEventSlim release)
+            {
+                m_release = release;
+            }
+
+            /// <summary>
+            /// Gets the opening thread after seek validation starts.
+            /// </summary>
+            public TaskCompletionSource<Thread> SeekEntered { get; } =
+                new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            /// <summary>
+            /// Gets the notification that seek validation is continuing.
+            /// </summary>
+            public TaskCompletionSource<bool> SeekExited { get; } =
+                new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            /// <inheritdoc/>
+            public override bool CanSeek
+            {
+                get
+                {
+                    if (Interlocked.Exchange(ref m_seekStarted, 1) == 0)
+                    {
+                        SeekEntered.TrySetResult(Thread.CurrentThread);
+                        if (!m_release.Wait(TimeSpan.FromSeconds(10)))
+                        {
+                            throw new TimeoutException("The test did not release seek validation.");
+                        }
+                        SeekExited.TrySetResult(true);
+                    }
+                    return base.CanSeek;
+                }
+            }
+
+            private readonly ManualResetEventSlim m_release;
+            private int m_seekStarted;
         }
 
         /// <summary>
