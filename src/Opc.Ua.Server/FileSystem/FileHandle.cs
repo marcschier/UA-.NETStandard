@@ -466,7 +466,7 @@ namespace Opc.Ua.Server.FileSystem
                     }
                     if (m_write != null || (wantsWrite && m_reads.Count != 0))
                     {
-                        error = ServiceResult.Create(StatusCodes.BadInvalidState,
+                        error = ServiceResult.Create(StatusCodes.BadNotWritable,
                             "File already open with incompatible access.");
                         return false;
                     }

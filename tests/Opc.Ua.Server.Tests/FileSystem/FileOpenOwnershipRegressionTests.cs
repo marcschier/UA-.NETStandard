@@ -168,7 +168,7 @@ namespace Opc.Ua.Server.Tests.FileSystem
             harness.Provider.Invocations.Clear();
             (ServiceResult result, _) = await FileReadRegressionTests.CallAsync(
                 harness.File.Open!, harness.Manager.SystemContext, harness.File.NodeId, [(byte)6]).ConfigureAwait(false);
-            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.BadInvalidState));
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.BadNotWritable));
             harness.Provider.Verify(value => value.OpenWriteAsync(
                 It.IsAny<string>(), It.IsAny<FileWriteMode>(), It.IsAny<CancellationToken>()), Times.Never);
             Assert.That(harness.GetHandle().GetStream(harness.SessionId, original), Is.Not.Null);
@@ -199,7 +199,7 @@ namespace Opc.Ua.Server.Tests.FileSystem
                 (ServiceResult result, _) = await FileReadRegressionTests.CallAsync(
                     harness.File.Open!, harness.Manager.SystemContext, harness.File.NodeId, [(byte)6])
                     .ConfigureAwait(false);
-                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.BadInvalidState));
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.BadNotWritable));
                 harness.Provider.Verify(value => value.OpenWriteAsync(
                     It.IsAny<string>(), It.IsAny<FileWriteMode>(), It.IsAny<CancellationToken>()), Times.Never);
             }
@@ -207,6 +207,92 @@ namespace Opc.Ua.Server.Tests.FileSystem
             {
                 release.TrySetResult(new MemoryStream(new byte[4], writable: true));
                 await read.ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Existing and pending opens reject erase-open before the provider can modify content on either call path.
+        /// </summary>
+        [TestCase(false, false, false)]
+        [TestCase(false, false, true)]
+        [TestCase(false, true, false)]
+        [TestCase(false, true, true)]
+        [TestCase(true, false, false)]
+        [TestCase(true, false, true)]
+        [TestCase(true, true, false)]
+        [TestCase(true, true, true)]
+        public async Task WriteConflictRejectsBeforeProviderEffectsAsync(
+            bool existingWriter, bool pendingOpen, bool synchronousRejection)
+        {
+            using var harness = new FileHarness();
+            using var stream = new MemoryStream(new byte[] { 10, 20, 30, 40 }, writable: true);
+            var release = new TaskCompletionSource<Stream>(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (pendingOpen)
+            {
+                if (existingWriter)
+                {
+                    harness.Provider.Setup(value => value.OpenWriteAsync(
+                        "file", It.IsAny<FileWriteMode>(), It.IsAny<CancellationToken>()))
+                        .Returns(new ValueTask<Stream>(release.Task));
+                }
+                else
+                {
+                    harness.Provider.Setup(value => value.OpenReadAsync("file", It.IsAny<CancellationToken>()))
+                        .Returns(new ValueTask<Stream>(release.Task));
+                }
+            }
+            else
+            {
+                release.TrySetResult(stream);
+                harness.Provider.Setup(value => value.OpenReadAsync("file", It.IsAny<CancellationToken>()))
+                    .Returns(new ValueTask<Stream>(stream));
+                harness.Provider.Setup(value => value.OpenWriteAsync(
+                    "file", It.IsAny<FileWriteMode>(), It.IsAny<CancellationToken>()))
+                    .Returns(new ValueTask<Stream>(stream));
+            }
+            FileHandle handle = harness.GetHandle();
+            Task<(ServiceResult Result, uint Handle)> original =
+                handle.OpenAsync(harness.SessionId, existingWriter ? (byte)2 : (byte)1, CancellationToken.None)
+                    .AsTask();
+            try
+            {
+                Assert.That(original.IsCompleted, Is.EqualTo(!pendingOpen));
+                Assert.That(handle.OpenCount, Is.EqualTo(pendingOpen ? 0 : 1));
+                harness.Provider.Invocations.Clear();
+                if (synchronousRejection)
+                {
+                    ServiceResult result = handle.Open(harness.SessionId, 6, out uint rejectedHandle);
+                    Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.BadNotWritable));
+                    Assert.That(rejectedHandle, Is.Zero);
+                }
+                else
+                {
+                    OpenMethodStateResult result = await harness.File.Open!.OnCallAsync!(
+                        harness.Manager.SystemContext, harness.File.Open, harness.File.NodeId, 6,
+                        CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.ServiceResult.StatusCode, Is.EqualTo(StatusCodes.BadNotWritable));
+                    Assert.That(result.FileHandle, Is.Zero);
+                }
+                harness.Provider.Verify(value => value.OpenWriteAsync(
+                    It.IsAny<string>(), It.IsAny<FileWriteMode>(), It.IsAny<CancellationToken>()), Times.Never);
+                harness.Provider.Verify(value => value.OpenReadAsync(
+                    It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+                Assert.That(stream.ToArray(), Is.EqualTo(new byte[] { 10, 20, 30, 40 }));
+                Assert.That(stream.Position, Is.Zero);
+                Assert.That(stream.CanRead, Is.True);
+                Assert.That(handle.OpenCount, Is.EqualTo(pendingOpen ? 0 : 1));
+            }
+            finally
+            {
+                release.TrySetResult(stream);
+                (ServiceResult result, uint id) = await original.ConfigureAwait(false);
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Good));
+                Assert.That(id, Is.Not.Zero);
+                Assert.That(handle.GetStream(harness.SessionId, id), Is.SameAs(stream));
+                Assert.That(handle.OpenCount, Is.EqualTo(1));
+                Assert.That(await handle.CloseAsync(harness.SessionId, id).ConfigureAwait(false), Is.True);
+                Assert.That(handle.OpenCount, Is.Zero);
             }
         }
 
