@@ -36,7 +36,6 @@ using NUnit.Framework;
 using Opc.Ua.AutoID.Client;
 using Opc.Ua.Client;
 using Opc.Ua.Client.Subscriptions;
-using Opc.Ua.Client.Subscriptions.MonitoredItems;
 using Opc.Ua.Client.Subscriptions.Streaming;
 using Opc.Ua.Tests;
 
@@ -82,7 +81,7 @@ namespace Opc.Ua.AutoID.Tests
             var streaming = new Mock<IStreamingSubscription>(MockBehavior.Strict);
             streaming.Setup(value => value.SubscribeDataChangesAsync(
                     It.IsAny<NodeId>(),
-                    It.IsAny<MonitoredItemOptions?>(),
+                    It.IsAny<Opc.Ua.Client.Subscriptions.MonitoredItems.MonitoredItemOptions?>(),
                     It.IsAny<CancellationToken>()))
                 .Returns(EmptyChanges());
 
@@ -93,7 +92,7 @@ namespace Opc.Ua.AutoID.Tests
             Assert.That(await changes.MoveNextAsync().ConfigureAwait(false), Is.False);
             streaming.Verify(value => value.SubscribeDataChangesAsync(
                 It.IsAny<NodeId>(),
-                It.IsAny<MonitoredItemOptions?>(),
+                It.IsAny<Opc.Ua.Client.Subscriptions.MonitoredItems.MonitoredItemOptions?>(),
                 It.IsAny<CancellationToken>()), Times.Once);
         }
 
