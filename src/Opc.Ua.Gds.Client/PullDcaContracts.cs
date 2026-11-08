@@ -59,6 +59,11 @@ namespace Opc.Ua.Gds.Client
         public int MaximumFinishAttempts { get; set; } = 3;
 
         /// <summary>
+        /// Gets or sets the maximum new key-pair requests started after FinishRequest reports Bad_InvalidArgument.
+        /// </summary>
+        public int MaximumNewKeyPairRestarts { get; set; } = 1;
+
+        /// <summary>
         /// Gets or sets the delay between pending certificate request checks and retries of transport failures.
         /// </summary>
         public TimeSpan FinishRetryDelay { get; set; } = TimeSpan.FromSeconds(1);
@@ -102,7 +107,24 @@ namespace Opc.Ua.Gds.Client
     public sealed record PullDcaManagedApplication(
         ApplicationRecordDataType Application,
         string ProtocolUri,
-        PullDcaCertificateProfile CertificateProfile);
+        PullDcaCertificateProfile CertificateProfile,
+        PullDcaCertificateRequestMode CertificateRequestMode = PullDcaCertificateRequestMode.SigningRequest);
+
+    /// <summary>
+    /// Selects whether the registrar signs a locally generated key or creates a new key pair.
+    /// </summary>
+    public enum PullDcaCertificateRequestMode
+    {
+        /// <summary>
+        /// Signs a CSR for a private key retained by the host.
+        /// </summary>
+        SigningRequest,
+
+        /// <summary>
+        /// Creates a new key pair at the certificate manager and returns its PFX from FinishRequest.
+        /// </summary>
+        NewKeyPairRequest
+    }
 
     /// <summary>
     /// Inputs for one pull onboarding operation; no lifecycle state is implicitly persisted.
@@ -110,7 +132,9 @@ namespace Opc.Ua.Gds.Client
     public sealed record PullDcaRequest(
         PullDcaIdentityOffer IdentityOffer,
         PullDcaCertificateProfile DcaCertificateProfile,
-        ArrayOf<PullDcaManagedApplication> ManagedApplications);
+        ArrayOf<PullDcaManagedApplication> ManagedApplications,
+        PullDcaCertificateRequestMode DcaCertificateRequestMode =
+            PullDcaCertificateRequestMode.SigningRequest);
 
     /// <summary>
     /// A locally generated key's issued certificate, issuer chain and downloaded trust list.
@@ -304,6 +328,28 @@ namespace Opc.Ua.Gds.Client
         ValueTask InstallAsync(
             NodeId applicationId,
             PullDcaCredentials credentials,
+            CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
+    /// Installs a private key pair returned by OPC 10000-12 StartNewKeyPairRequest.
+    /// </summary>
+    /// <remarks>
+    /// The private key is supplied as the PFX returned by FinishRequest, without a password. Implementations must
+    /// validate that it contains the supplied certificate and matching private key, then retain it only through the
+    /// configured certificate-store infrastructure. They must not persist it through a signing receipt, log it, or
+    /// write it to an unprotected temporary file. The workflow does not retry this operation after failure.
+    /// </remarks>
+    public interface IPullDcaNewKeyPairCredentialProvider
+    {
+        /// <summary>
+        /// Validates and installs the issued certificate and returned private key through host-owned stores.
+        /// </summary>
+        ValueTask InstallNewKeyPairAsync(
+            NodeId applicationId,
+            PullDcaCertificateProfile profile,
+            PullDcaCredentials credentials,
+            ByteString privateKeyPfx,
             CancellationToken cancellationToken = default);
     }
 

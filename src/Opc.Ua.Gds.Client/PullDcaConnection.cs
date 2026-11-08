@@ -67,10 +67,22 @@ namespace Opc.Ua.Gds.Client
             NodeId applicationId, PullDcaCertificateProfile profile, ByteString csr, CancellationToken ct);
 
         /// <summary>
+        /// Starts a certificate-manager-generated key-pair request using the required PFX format.
+        /// </summary>
+        ValueTask<NodeId> StartNewKeyPairAsync(
+            NodeId applicationId, PullDcaCertificateProfile profile, CancellationToken ct);
+
+        /// <summary>
         /// Calls the certificate directory's generated completion proxy.
         /// </summary>
         ValueTask<(ByteString Certificate, ArrayOf<ByteString> Issuers)> FinishAsync(
             NodeId applicationId, NodeId requestId, CancellationToken ct);
+
+        /// <summary>
+        /// Finishes a new-key-pair request and returns private-key material only to the workflow caller.
+        /// </summary>
+        ValueTask<(ByteString Certificate, ByteString PrivateKeyPfx, ArrayOf<ByteString> Issuers)>
+            FinishNewKeyPairAsync(NodeId applicationId, NodeId requestId, CancellationToken ct);
 
         /// <summary>
         /// Reads currently assigned certificates for one application and certificate group.
@@ -98,7 +110,13 @@ namespace Opc.Ua.Gds.Client
             PullDcaRegistrar registrar,
             ITelemetryContext telemetry,
             long maximumTrustListSize)
-            : this(session, registrar, telemetry, maximumTrustListSize, ct => ReloadAndReconnectAsync(session, ct))
+            : this(
+                session,
+                registrar,
+                telemetry,
+                maximumTrustListSize,
+                ct => ReloadAndReconnectAsync(session, ct),
+                ct => SessionRequestContext.CaptureConfidentialAsync(session, ct))
         {
             if (!registrar.EndpointUrl.Equals(session.ConfiguredEndpoint.EndpointUrl))
             {
@@ -117,13 +135,29 @@ namespace Opc.Ua.Gds.Client
             ITelemetryContext telemetry,
             long maximumTrustListSize,
             Func<CancellationToken, ValueTask> reconnect)
+            : this(session, registrar, telemetry, maximumTrustListSize, reconnect, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates a typed proxy adapter with optional generation-bound private-key response dispatch.
+        /// </summary>
+        internal PullDcaConnection(
+            ISession session,
+            PullDcaRegistrar registrar,
+            ITelemetryContext telemetry,
+            long maximumTrustListSize,
+            Func<CancellationToken, ValueTask> reconnect,
+            Func<CancellationToken, ValueTask<SessionRequestContext>>? confidentialContextFactory)
         {
             m_session = session ?? throw new ArgumentNullException(nameof(session));
             m_registrar = new DeviceRegistrarTypeClient(session, registrar.RegistrarId, telemetry);
             m_directory = new CertificateDirectoryTypeClient(session, registrar.CertificateDirectoryId, telemetry);
+            m_certificateDirectoryId = SnapshotNodeId(registrar.CertificateDirectoryId);
             m_telemetry = telemetry;
             m_maximumTrustListSize = maximumTrustListSize;
             m_reconnect = reconnect ?? throw new ArgumentNullException(nameof(reconnect));
+            m_confidentialContextFactory = confidentialContextFactory;
         }
 
         /// <inheritdoc/>
@@ -163,6 +197,39 @@ namespace Opc.Ua.Gds.Client
         }
 
         /// <inheritdoc/>
+        public async ValueTask<NodeId> StartNewKeyPairAsync(
+            NodeId applicationId, PullDcaCertificateProfile profile, CancellationToken ct)
+        {
+            SessionRequestContext? context = null;
+            try
+            {
+                CertificateDirectoryTypeClient directory = m_directory;
+                if (m_confidentialContextFactory != null)
+                {
+                    context = await m_confidentialContextFactory(ct).ConfigureAwait(false);
+                    directory = new CertificateDirectoryTypeClient(
+                        context.Session, m_certificateDirectoryId, m_telemetry);
+                }
+                return await directory.StartNewKeyPairRequestAsync(
+                    applicationId,
+                    profile.CertificateGroupId,
+                    profile.CertificateTypeId,
+                    string.Empty,
+                    [],
+                    "PFX",
+                    string.Empty,
+                    ct).ConfigureAwait(false);
+            }
+            finally
+            {
+                if (context != null)
+                {
+                    await context.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
         public async ValueTask<(ByteString Certificate, ArrayOf<ByteString> Issuers)> FinishAsync(
             NodeId applicationId, NodeId requestId, CancellationToken ct)
         {
@@ -174,6 +241,33 @@ namespace Opc.Ua.Gds.Client
                     StatusCodes.BadSecurityChecksFailed, "A signing request unexpectedly returned a private key.");
             }
             return (certificate, issuers);
+        }
+
+        /// <inheritdoc/>
+        public async ValueTask<(ByteString Certificate, ByteString PrivateKeyPfx, ArrayOf<ByteString> Issuers)>
+            FinishNewKeyPairAsync(NodeId applicationId, NodeId requestId, CancellationToken ct)
+        {
+            SessionRequestContext? context = null;
+            try
+            {
+                CertificateDirectoryTypeClient directory = m_directory;
+                if (m_confidentialContextFactory != null)
+                {
+                    context = await m_confidentialContextFactory(ct).ConfigureAwait(false);
+                    directory = new CertificateDirectoryTypeClient(
+                        context.Session, m_certificateDirectoryId, m_telemetry);
+                }
+                var (certificate, privateKey, issuers) = await directory.FinishRequestAsync(
+                    applicationId, requestId, ct).ConfigureAwait(false);
+                return (certificate, privateKey, issuers);
+            }
+            finally
+            {
+                if (context != null)
+                {
+                    await context.DisposeAsync().ConfigureAwait(false);
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -255,6 +349,11 @@ namespace Opc.Ua.Gds.Client
         private readonly CertificateDirectoryTypeClient m_directory;
 
         /// <summary>
+        /// Certificate directory identifier used by generation-bound proxies.
+        /// </summary>
+        private readonly NodeId m_certificateDirectoryId;
+
+        /// <summary>
         /// Telemetry used by file proxies.
         /// </summary>
         private readonly ITelemetryContext m_telemetry;
@@ -268,5 +367,10 @@ namespace Opc.Ua.Gds.Client
         /// Reloads and reconnects the host-owned session.
         /// </summary>
         private readonly Func<CancellationToken, ValueTask> m_reconnect;
+
+        /// <summary>
+        /// Captures the physical encrypted transport for private-key responses.
+        /// </summary>
+        private readonly Func<CancellationToken, ValueTask<SessionRequestContext>>? m_confidentialContextFactory;
     }
 }

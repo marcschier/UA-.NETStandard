@@ -55,7 +55,8 @@ namespace Opc.Ua.Gds.Client
             IPullDcaSoftwareUpdateProvider? softwareUpdateProvider = null,
             IPullDcaRegistrarDiscovery? discovery = null,
             IPullDcaCertificateReceiptStore? receipts = null,
-            IPullDcaSigningRecoveryProvider? signingRecovery = null)
+            IPullDcaSigningRecoveryProvider? signingRecovery = null,
+            IPullDcaNewKeyPairCredentialProvider? newKeyPairCredentialProvider = null)
             : this(
                 options,
                 CreateConnectionFactory(options, sessionAccessor, telemetry),
@@ -64,7 +65,8 @@ namespace Opc.Ua.Gds.Client
                 softwareUpdateProvider,
                 discovery,
                 receipts,
-                signingRecovery)
+                signingRecovery,
+                newKeyPairCredentialProvider)
         {
         }
 
@@ -79,13 +81,18 @@ namespace Opc.Ua.Gds.Client
             IPullDcaSoftwareUpdateProvider? softwareUpdateProvider = null,
             IPullDcaRegistrarDiscovery? discovery = null,
             IPullDcaCertificateReceiptStore? receipts = null,
-            IPullDcaSigningRecoveryProvider? signingRecovery = null)
+            IPullDcaSigningRecoveryProvider? signingRecovery = null,
+            IPullDcaNewKeyPairCredentialProvider? newKeyPairCredentialProvider = null)
         {
             if (options is null)
             {
                 throw new ArgumentNullException(nameof(options));
             }
             if (options.MaximumFinishAttempts < 1 || options.MaximumFinishAttempts > 100)
+            {
+                throw new ArgumentOutOfRangeException(nameof(options));
+            }
+            if (options.MaximumNewKeyPairRestarts < 0 || options.MaximumNewKeyPairRestarts > 10)
             {
                 throw new ArgumentOutOfRangeException(nameof(options));
             }
@@ -102,12 +109,15 @@ namespace Opc.Ua.Gds.Client
             m_connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             m_identityProvider = identityProvider ?? throw new ArgumentNullException(nameof(identityProvider));
             m_credentialProvider = credentialProvider ?? throw new ArgumentNullException(nameof(credentialProvider));
+            m_newKeyPairCredentialProvider = newKeyPairCredentialProvider ??
+                credentialProvider as IPullDcaNewKeyPairCredentialProvider;
             m_softwareUpdateProvider = softwareUpdateProvider;
             m_discovery = discovery;
             m_receipts = receipts;
             m_signingRecovery = signingRecovery;
             m_registrars = options.Registrars.ToArray() ?? [];
             m_maximumFinishAttempts = options.MaximumFinishAttempts;
+            m_maximumNewKeyPairRestarts = options.MaximumNewKeyPairRestarts;
             m_finishRetryDelay = options.FinishRetryDelay;
             m_operationTimeout = options.OperationTimeout;
         }
@@ -145,6 +155,7 @@ namespace Opc.Ua.Gds.Client
             ValidateRegistrar(registrar);
             registrar = PullDcaConnection.SnapshotRegistrar(registrar);
             request = SnapshotRequest(request);
+            ValidateKeyPairSupport(request.DcaCertificateRequestMode, request.ManagedApplications);
             cancellationToken.ThrowIfCancellationRequested();
             if (Interlocked.CompareExchange(ref m_running, 1, 0) != 0)
             {
@@ -183,7 +194,8 @@ namespace Opc.Ua.Gds.Client
                 }
 
                 PullDcaCredentials dcaCredentials = await ProvisionAsync(
-                    registrar, connection, identity.ApplicationId, request.DcaCertificateProfile, progress, ct)
+                    registrar, connection, identity.ApplicationId, request.DcaCertificateProfile,
+                    request.DcaCertificateRequestMode, progress, ct)
                     .ConfigureAwait(false);
                 Report(progress, PullDcaStage.ActivatingDca, identity.ApplicationId);
                 await connection.ReloadAndReconnectAsync(ct).ConfigureAwait(false);
@@ -217,6 +229,7 @@ namespace Opc.Ua.Gds.Client
             ValidateRegistrar(registrar);
             registrar = PullDcaConnection.SnapshotRegistrar(registrar);
             managedApplications = SnapshotManagedApplications(managedApplications);
+            ValidateKeyPairSupport(PullDcaCertificateRequestMode.SigningRequest, managedApplications);
             cancellationToken.ThrowIfCancellationRequested();
             if (Interlocked.CompareExchange(ref m_running, 1, 0) != 0)
             {
@@ -309,7 +322,8 @@ namespace Opc.Ua.Gds.Client
                     throw new ServiceResultException(StatusCodes.BadUnexpectedError);
                 }
                 PullDcaCredentials credentials = await ProvisionAsync(
-                    registrar, connection, applicationId, application.CertificateProfile, progress, ct)
+                    registrar, connection, applicationId, application.CertificateProfile,
+                    application.CertificateRequestMode, progress, ct)
                     .ConfigureAwait(false);
                 applications.Add(new PullDcaProvisionedApplication(applicationId, credentials));
             }
@@ -321,9 +335,15 @@ namespace Opc.Ua.Gds.Client
             IPullDcaConnection connection,
             NodeId applicationId,
             PullDcaCertificateProfile profile,
+            PullDcaCertificateRequestMode requestMode,
             IProgress<PullDcaProgress>? progress,
             CancellationToken ct)
         {
+            if (requestMode == PullDcaCertificateRequestMode.NewKeyPairRequest)
+            {
+                return await ProvisionNewKeyPairAsync(
+                    connection, applicationId, profile, progress, ct).ConfigureAwait(false);
+            }
             Report(progress, PullDcaStage.RequestingCertificate, applicationId);
             ByteString csr = await m_credentialProvider.CreateSigningRequestAsync(applicationId, profile, ct)
                 .ConfigureAwait(false);
@@ -344,6 +364,109 @@ namespace Opc.Ua.Gds.Client
             }
             return await FinishAndInstallAsync(registrar, connection, applicationId, requestId, profile, progress, ct)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Uses the Part 12 key-pair operation. A consumed FinishRequest cannot use signing recovery; it starts a
+        /// fresh key-pair request, as required by Part 12 §7.9.5.
+        /// </summary>
+        private async ValueTask<PullDcaCredentials> ProvisionNewKeyPairAsync(
+            IPullDcaConnection connection,
+            NodeId applicationId,
+            PullDcaCertificateProfile profile,
+            IProgress<PullDcaProgress>? progress,
+            CancellationToken ct)
+        {
+            for (int restart = 0; restart <= m_maximumNewKeyPairRestarts; restart++)
+            {
+                Report(progress, PullDcaStage.RequestingCertificate, applicationId);
+                NodeId requestId = await connection.StartNewKeyPairAsync(applicationId, profile, ct)
+                    .ConfigureAwait(false);
+                if (requestId.IsNull)
+                {
+                    throw new ServiceResultException(StatusCodes.BadUnexpectedError);
+                }
+
+                bool restartRequest = false;
+                for (int attempt = 0; attempt < m_maximumFinishAttempts; attempt++)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    Report(progress, PullDcaStage.FinishingCertificate, applicationId, requestId);
+                    ByteString certificate;
+                    ByteString privateKeyPfx;
+                    ArrayOf<ByteString> issuers;
+                    try
+                    {
+                        (certificate, privateKeyPfx, issuers) = await connection.FinishNewKeyPairAsync(
+                            applicationId, requestId, ct).ConfigureAwait(false);
+                    }
+                    catch (ServiceResultException error) when (error.StatusCode == StatusCodes.BadNothingToDo)
+                    {
+                        certificate = default;
+                        privateKeyPfx = default;
+                        issuers = default;
+                    }
+                    catch (ServiceResultException error) when (
+                        IsRetryableFinishFailure(error.StatusCode) && attempt + 1 < m_maximumFinishAttempts)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        await Task.Delay(m_finishRetryDelay, ct).ConfigureAwait(false);
+                        continue;
+                    }
+                    catch (ServiceResultException error) when (
+                        error.StatusCode == StatusCodes.BadInvalidArgument &&
+                        restart < m_maximumNewKeyPairRestarts)
+                    {
+                        restartRequest = true;
+                        break;
+                    }
+
+                    if (certificate.IsEmpty != privateKeyPfx.IsEmpty)
+                    {
+                        throw new ServiceResultException(
+                            StatusCodes.BadSecurityChecksFailed,
+                            "The key-pair request returned incomplete certificate or private-key output.");
+                    }
+
+                    if (!certificate.IsEmpty)
+                    {
+                        foreach (ByteString issuer in issuers)
+                        {
+                            if (issuer.IsEmpty)
+                            {
+                                throw new ServiceResultException(
+                                    StatusCodes.BadSecurityChecksFailed,
+                                    "The key-pair request returned an empty issuer certificate.");
+                            }
+                        }
+                        ct.ThrowIfCancellationRequested();
+                        Report(progress, PullDcaStage.ReadingTrustList, applicationId, requestId);
+                        TrustListDataType trustList = await connection.ReadTrustListAsync(
+                            applicationId, profile.CertificateGroupId, ct).ConfigureAwait(false);
+                        if (trustList == null)
+                        {
+                            throw new ServiceResultException(StatusCodes.BadUnexpectedError);
+                        }
+                        var credentials = new PullDcaCredentials(certificate, issuers, trustList);
+                        Report(progress, PullDcaStage.InstallingCredentials, applicationId, requestId);
+                        await m_newKeyPairCredentialProvider!.InstallNewKeyPairAsync(
+                            applicationId, profile, credentials, privateKeyPfx, ct).ConfigureAwait(false);
+                        return credentials;
+                    }
+
+                    if (attempt + 1 < m_maximumFinishAttempts)
+                    {
+                        await Task.Delay(m_finishRetryDelay, ct).ConfigureAwait(false);
+                    }
+                }
+
+                if (restartRequest)
+                {
+                    continue;
+                }
+                throw new PullDcaCertificatePendingException(applicationId, requestId);
+            }
+            throw new ServiceResultException(StatusCodes.BadInvalidState);
         }
 
         /// <summary>
@@ -570,7 +693,8 @@ namespace Opc.Ua.Gds.Client
                     SnapshotBytes(request.IdentityOffer.Issuers),
                     request.IdentityOffer.Tickets.ToArray().ToArrayOf()),
                 DcaCertificateProfile = PullDcaConnection.SnapshotProfile(request.DcaCertificateProfile),
-                ManagedApplications = SnapshotManagedApplications(request.ManagedApplications)
+                ManagedApplications = SnapshotManagedApplications(request.ManagedApplications),
+                DcaCertificateRequestMode = ValidateRequestMode(request.DcaCertificateRequestMode)
             };
         }
 
@@ -594,22 +718,68 @@ namespace Opc.Ua.Gds.Client
                 }
                 ValidateProfile(application.CertificateProfile);
                 ApplicationRecordDataType record = application.Application;
+                var snapshotRecord = new ApplicationRecordDataType
+                {
+                    ApplicationId = PullDcaConnection.SnapshotNodeId(record.ApplicationId),
+                    ApplicationUri = record.ApplicationUri,
+                    ApplicationType = record.ApplicationType,
+                    ProductUri = record.ProductUri,
+                    DiscoveryUrls = record.DiscoveryUrls.ToArray().ToArrayOf(),
+                    ServerCapabilities = record.ServerCapabilities.ToArray().ToArrayOf()
+                };
+                if (!record.ApplicationNames.IsNull)
+                {
+                    snapshotRecord.ApplicationNames = SnapshotApplicationNames(record.ApplicationNames);
+                }
                 applications[i] = application with
                 {
-                    Application = new ApplicationRecordDataType
-                    {
-                        ApplicationId = PullDcaConnection.SnapshotNodeId(record.ApplicationId),
-                        ApplicationUri = record.ApplicationUri,
-                        ApplicationType = record.ApplicationType,
-                        ApplicationNames = SnapshotApplicationNames(record.ApplicationNames),
-                        ProductUri = record.ProductUri,
-                        DiscoveryUrls = record.DiscoveryUrls.ToArray().ToArrayOf(),
-                        ServerCapabilities = record.ServerCapabilities.ToArray().ToArrayOf()
-                    },
-                    CertificateProfile = PullDcaConnection.SnapshotProfile(application.CertificateProfile)
+                    Application = snapshotRecord,
+                    CertificateProfile = PullDcaConnection.SnapshotProfile(application.CertificateProfile),
+                    CertificateRequestMode = ValidateRequestMode(application.CertificateRequestMode)
                 };
             }
             return applications;
+        }
+
+        /// <summary>
+        /// Rejects requests that require a host key-pair installer when none is registered.
+        /// </summary>
+        private void ValidateKeyPairSupport(
+            PullDcaCertificateRequestMode dcaRequestMode,
+            ArrayOf<PullDcaManagedApplication> managedApplications)
+        {
+            if (m_newKeyPairCredentialProvider != null)
+            {
+                return;
+            }
+            if (dcaRequestMode == PullDcaCertificateRequestMode.NewKeyPairRequest)
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadConfigurationError,
+                    $"A {nameof(IPullDcaNewKeyPairCredentialProvider)} is required for a new key-pair request.");
+            }
+            for (int i = 0; i < managedApplications.Count; i++)
+            {
+                if (managedApplications[i].CertificateRequestMode == PullDcaCertificateRequestMode.NewKeyPairRequest)
+                {
+                    throw new ServiceResultException(
+                        StatusCodes.BadConfigurationError,
+                        $"A {nameof(IPullDcaNewKeyPairCredentialProvider)} is required for a new key-pair request.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Validates a requested certificate provisioning mode.
+        /// </summary>
+        private static PullDcaCertificateRequestMode ValidateRequestMode(PullDcaCertificateRequestMode requestMode)
+        {
+            if (requestMode is not PullDcaCertificateRequestMode.SigningRequest and
+                not PullDcaCertificateRequestMode.NewKeyPairRequest)
+            {
+                throw new ArgumentOutOfRangeException(nameof(requestMode));
+            }
+            return requestMode;
         }
 
         /// <summary>
@@ -680,6 +850,11 @@ namespace Opc.Ua.Gds.Client
         private readonly IPullDcaCredentialProvider m_credentialProvider;
 
         /// <summary>
+        /// Optional host-owned installer for server-generated key pairs.
+        /// </summary>
+        private readonly IPullDcaNewKeyPairCredentialProvider? m_newKeyPairCredentialProvider;
+
+        /// <summary>
         /// Optional real software-update bridge.
         /// </summary>
         private readonly IPullDcaSoftwareUpdateProvider? m_softwareUpdateProvider;
@@ -708,6 +883,11 @@ namespace Opc.Ua.Gds.Client
         /// Finite certificate completion attempt limit.
         /// </summary>
         private readonly int m_maximumFinishAttempts;
+
+        /// <summary>
+        /// Maximum fresh key-pair requests after a consumed completion request.
+        /// </summary>
+        private readonly int m_maximumNewKeyPairRestarts;
 
         /// <summary>
         /// Bounded delay between pending responses.

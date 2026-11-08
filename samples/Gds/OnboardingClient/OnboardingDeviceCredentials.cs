@@ -80,6 +80,7 @@ namespace OnboardingClientSample
     internal sealed class OnboardingDeviceCredentials :
         IPullDcaIdentityProvider,
         IPullDcaCredentialProvider,
+        IPullDcaNewKeyPairCredentialProvider,
         IPullDcaSigningRecoveryProvider,
         IPullDcaSigningRequestObserver
     {
@@ -265,6 +266,66 @@ namespace OnboardingClientSample
             using Certificate combined = DefaultCertificateFactory.Instance.CreateWithPrivateKey(
                 issued, key.Certificate);
             await InstallCombinedAsync(issued, combined, credentials, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        public async ValueTask InstallNewKeyPairAsync(
+            NodeId applicationId,
+            PullDcaCertificateProfile profile,
+            PullDcaCredentials credentials,
+            ByteString privateKeyPfx,
+            CancellationToken cancellationToken = default)
+        {
+            if (profile == null)
+            {
+                throw new ArgumentNullException(nameof(profile));
+            }
+            if (credentials == null)
+            {
+                throw new ArgumentNullException(nameof(credentials));
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            if (applicationId.IsNull || profile.CertificateGroupId.IsNull ||
+                profile.CertificateTypeId != ObjectTypeIds.RsaSha256ApplicationCertificateType ||
+                (!m_applicationId.IsNull && (m_applicationId != applicationId || m_profile != profile)))
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadRequestNotAllowed, "This sample credential provider serves one RSA DCA.");
+            }
+            if (credentials.Certificate.IsEmpty || privateKeyPfx.IsEmpty)
+            {
+                throw new ServiceResultException(StatusCodes.BadSecurityChecksFailed);
+            }
+
+            using Certificate issued = Certificate.FromRawData(credentials.Certificate);
+            if (!X509Utils.GetApplicationUrisFromCertificate(issued).Contains(m_configuration.ApplicationUri) ||
+                !CertificateIdentifier.ValidateCertificateType(
+                    issued, ObjectTypeIds.RsaSha256ApplicationCertificateType))
+            {
+                throw new ServiceResultException(StatusCodes.BadCertificateInvalid);
+            }
+            byte[] pfxBytes = privateKeyPfx.ToArray();
+            try
+            {
+                using Certificate returnedKeyPair = X509Utils.CreateCertificateFromPKCS12(
+                    pfxBytes, ReadOnlySpan<char>.Empty);
+                if (!returnedKeyPair.HasPrivateKey ||
+                    !returnedKeyPair.RawData.AsSpan().SequenceEqual(issued.RawData))
+                {
+                    throw new ServiceResultException(
+                        StatusCodes.BadSecurityChecksFailed,
+                        "The returned PFX does not contain the issued certificate and its private key.");
+                }
+                using Certificate combined = DefaultCertificateFactory.Instance.CreateWithPrivateKey(
+                    issued, returnedKeyPair);
+                await InstallCombinedAsync(issued, combined, credentials, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                Array.Clear(pfxBytes, 0, pfxBytes.Length);
+            }
+            m_applicationId = applicationId;
+            m_profile = profile;
         }
 
         /// <summary>
