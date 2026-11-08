@@ -66,10 +66,10 @@ namespace Opc.Ua.AutoID.Tests
                 .ObserveScanActiveAsync(streaming.Object, ReaderFor(namespaceIndex))
                 .GetAsyncEnumerator();
 
-            ServiceResultException? error = Assert.ThrowsAsync<ServiceResultException>(
-                async () => await changes.MoveNextAsync().ConfigureAwait(false));
+            ServiceResultException error = (await Assert.ThrowsAsync<ServiceResultException>(
+                async () => await changes.MoveNextAsync().ConfigureAwait(false)))!;
 
-            Assert.That(error!.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadNotFound));
+            Assert.That(error.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadNotFound));
             streaming.VerifyNoOtherCalls();
         }
 
@@ -152,10 +152,10 @@ namespace Opc.Ua.AutoID.Tests
                 Child(BrowseNames.ScanActive, NodeClass.Variable, namespaceIndex, new NodeId("second", namespaceIndex))
             ]);
 
-            ServiceResultException? error = Assert.ThrowsAsync<ServiceResultException>(
-                async () => await client.ReadScanActiveAsync(ReaderFor(namespaceIndex)).ConfigureAwait(false));
+            ServiceResultException error = (await Assert.ThrowsAsync<ServiceResultException>(
+                async () => await client.ReadScanActiveAsync(ReaderFor(namespaceIndex)).ConfigureAwait(false)))!;
 
-            Assert.That(error!.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadBrowseNameDuplicated));
+            Assert.That(error.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadBrowseNameDuplicated));
         }
 
         [TestCase("not-bool", StatusCodes.Good, StatusCodes.BadTypeMismatch)]
@@ -191,10 +191,10 @@ namespace Opc.Ua.AutoID.Tests
             SetupBrowse(session, _ => [Child(BrowseNames.ScanActive, NodeClass.Variable, namespaceIndex)]);
             SetupRead(session, _ => []);
 
-            ServiceResultException? error = Assert.ThrowsAsync<ServiceResultException>(
-                async () => await client.ReadScanActiveAsync(ReaderFor(namespaceIndex)).ConfigureAwait(false));
+            ServiceResultException error = (await Assert.ThrowsAsync<ServiceResultException>(
+                async () => await client.ReadScanActiveAsync(ReaderFor(namespaceIndex)).ConfigureAwait(false)))!;
 
-            Assert.That(error!.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadUnexpectedError));
+            Assert.That(error.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadUnexpectedError));
         }
 
         [Test]
@@ -204,11 +204,11 @@ namespace Opc.Ua.AutoID.Tests
             SetupBrowse(session, _ => [Child(BrowseNames.DeviceStatus, NodeClass.Variable, namespaceIndex)]);
             SetupRead(session, _ => [new DataValue(Variant.From((int)DeviceStatusEnumeration.Idle))]);
 
-            ServiceResultException? error = Assert.ThrowsAsync<ServiceResultException>(
+            ServiceResultException error = (await Assert.ThrowsAsync<ServiceResultException>(
                 async () => await client.ReadDeviceAsync(
-                    ReaderFor(namespaceIndex), AutoIdReadOptions.StatusOnly).ConfigureAwait(false));
+                    ReaderFor(namespaceIndex), AutoIdReadOptions.StatusOnly).ConfigureAwait(false)))!;
 
-            Assert.That(error!.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadNotFound));
+            Assert.That(error.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadNotFound));
         }
 
         [Test]
@@ -226,11 +226,11 @@ namespace Opc.Ua.AutoID.Tests
                 new DataValue(Variant.From((int)DeviceStatusEnumeration.Idle))
             ]);
 
-            ServiceResultException? error = Assert.ThrowsAsync<ServiceResultException>(
+            ServiceResultException error = (await Assert.ThrowsAsync<ServiceResultException>(
                 async () => await client.ReadDeviceAsync(
-                    ReaderFor(namespaceIndex), AutoIdReadOptions.StatusOnly).ConfigureAwait(false));
+                    ReaderFor(namespaceIndex), AutoIdReadOptions.StatusOnly).ConfigureAwait(false)))!;
 
-            Assert.That(error!.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadUserAccessDenied));
+            Assert.That(error.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadUserAccessDenied));
         }
 
         [Test]
