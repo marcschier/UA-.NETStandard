@@ -253,7 +253,8 @@ namespace Opc.Ua.Server.FileSystem
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (!TryReserveOpen(sessionId, mode, out OpenFile? pending, out ServiceResult error))
+            if (!TryReserveOpen(sessionId, mode, out OpenFile? pending, out ServiceResult error,
+                linkedOpenCancellation: true))
             {
                 return (error, 0);
             }
@@ -368,7 +369,8 @@ namespace Opc.Ua.Server.FileSystem
             NodeId sessionId,
             byte mode,
             out OpenFile? pending,
-            out ServiceResult error)
+            out ServiceResult error,
+            bool linkedOpenCancellation = false)
         {
             pending = null;
             if (sessionId.IsNull)
@@ -458,7 +460,7 @@ namespace Opc.Ua.Server.FileSystem
                             "File already open with incompatible access.");
                         return false;
                     }
-                    pending = new OpenFile(CreateFileHandle(), sessionId, mode);
+                    pending = new OpenFile(CreateFileHandle(), sessionId, mode, linkedOpenCancellation);
                     if (wantsWrite)
                     {
                         m_write = pending;
@@ -658,9 +660,11 @@ namespace Opc.Ua.Server.FileSystem
         /// <summary>
         /// Requests cancellation and retains cleanup ownership after the lifecycle deadline.
         /// </summary>
-        public void CloseSession(NodeId sessionId)
+        /// <param name="sessionId">The session whose handles must close.</param>
+        /// <param name="defer">Whether to defer provider disposal rather than starting it on the calling thread.</param>
+        public void CloseSession(NodeId sessionId, bool defer = true)
         {
-            _ = BeginShutdown(sessionId);
+            _ = BeginShutdown(sessionId, defer: defer);
         }
 
         /// <summary>
@@ -755,7 +759,11 @@ namespace Opc.Ua.Server.FileSystem
             TaskCompletionSource<bool>? cancellation = null;
             lock (m_lock)
             {
-                if (cancel && !file.Finished && file.Cancellation == null)
+                // Inline idle cleanup has no provider request left to cancel. In particular, do not
+                // queue the legacy CancelAsync polyfill before releasing an already-drained reservation.
+                if (cancel && (defer || m_disposed || !file.LinkedOpenCancellation ||
+                    file.Active != 0 || !file.Opened.Task.IsCompleted) &&
+                    !file.Finished && file.Cancellation == null)
                 {
                     cancellation = new(TaskCreationOptions.RunContinuationsAsynchronously);
                     file.Cancellation = cancellation.Task;
@@ -1002,11 +1010,12 @@ namespace Opc.Ua.Server.FileSystem
             /// <summary>
             /// Creates an open reservation for a session with the requested FileType mode bits.
             /// </summary>
-            public OpenFile(uint handle, NodeId sessionId, byte mode)
+            public OpenFile(uint handle, NodeId sessionId, byte mode, bool linkedOpenCancellation)
             {
                 Handle = handle;
                 SessionId = sessionId;
                 Mode = mode;
+                LinkedOpenCancellation = linkedOpenCancellation;
             }
 
             /// <summary>
@@ -1023,6 +1032,11 @@ namespace Opc.Ua.Server.FileSystem
             /// Gets the access and positioning flags accepted when reserving the handle.
             /// </summary>
             public byte Mode { get; }
+
+            /// <summary>
+            /// Gets whether completed provider-open cancellation is detached from the handle lifetime.
+            /// </summary>
+            public bool LinkedOpenCancellation { get; }
 
             /// <summary>
             /// Gets or sets the opened stream, or null while the provider open is still pending.

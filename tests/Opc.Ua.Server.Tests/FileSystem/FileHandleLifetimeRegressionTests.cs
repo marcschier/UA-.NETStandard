@@ -131,6 +131,155 @@ namespace Opc.Ua.Server.Tests.FileSystem
         }
 
         /// <summary>
+        /// An inline idle close releases the reservation without scheduling unnecessary cancellation.
+        /// </summary>
+        [Test]
+        public async Task InlineSessionClosureReleasesIdleWriterImmediatelyAsync()
+        {
+            using var stream = new MemoryStream();
+            Mock<IFileSystemReadWriteProvider> provider = Provider(stream);
+            provider.Setup(value => value.OpenReadAsync("file", It.IsAny<CancellationToken>()))
+                .Returns(() => new ValueTask<Stream>(new MemoryStream(new byte[] { 10, 20 }, writable: false)));
+            await using var handles = new FileHandle(provider.Object, "file");
+            (ServiceResult opened, uint writer) = await handles.OpenAsync(s_session, 3, CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(opened.StatusCode, Is.EqualTo(StatusCodes.Good));
+
+            handles.CloseSession(s_session, defer: false);
+
+            Assert.That(handles.OpenCount, Is.Zero);
+            Assert.That(handles.GetStream(s_session, writer), Is.Null);
+            Assert.That(stream.CanRead, Is.False);
+            Assert.That(handles.CleanupCompletion.IsCompleted, Is.True);
+            (ServiceResult result, uint reader) = await handles.OpenAsync(s_other, 1, CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Good));
+            Assert.That(await handles.CloseAsync(s_other, reader).ConfigureAwait(false), Is.True);
+        }
+
+        /// <summary>
+        /// Completed asynchronous open tokens are detached, while synchronous compatibility tokens still cancel.
+        /// </summary>
+        [TestCase(false, false)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        [TestCase(true, true)]
+        public async Task CompletedProviderOpenPreservesCancellationContractAsync(bool synchronous, bool defer)
+        {
+            using var stream = new MemoryStream();
+            Mock<IFileSystemReadWriteProvider> provider = Provider(stream);
+            CancellationToken providerToken = default;
+            CancellationTokenRegistration registration = default;
+            var cancelled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            provider.Setup(value => value.OpenReadWriteAsync(
+                "file", It.IsAny<FileWriteMode>(), It.IsAny<CancellationToken>()))
+                .Returns((string _, FileWriteMode _, CancellationToken token) =>
+                {
+                    providerToken = token;
+                    registration = token.Register(() => cancelled.TrySetResult(true));
+                    return new ValueTask<Stream>(stream);
+                });
+            await using var handles = new FileHandle(provider.Object, "file");
+            try
+            {
+                ServiceResult opened;
+                if (synchronous)
+                {
+                    opened = handles.Open(s_session, 3, out _);
+                }
+                else
+                {
+                    (opened, _) = await handles.OpenAsync(s_session, 3, CancellationToken.None).ConfigureAwait(false);
+                }
+                Assert.That(opened.StatusCode, Is.EqualTo(StatusCodes.Good));
+                handles.CloseSession(s_session, defer);
+                await handles.CleanupCompletion.ConfigureAwait(false);
+                Assert.That(providerToken.IsCancellationRequested, Is.EqualTo(synchronous));
+                Assert.That(cancelled.Task.IsCompleted, Is.EqualTo(synchronous));
+            }
+            finally
+            {
+                registration.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Inline lifecycle cleanup still cancels active work and retains its reservation until it drains.
+        /// </summary>
+        [Test]
+        public async Task InlineSessionClosureCancelsAndDrainsActiveOperationAsync()
+        {
+            using var stream = new MemoryStream();
+            await using var handles = new FileHandle(Provider(stream).Object, "file");
+            (_, uint writer) = await handles.OpenAsync(s_session, 3, CancellationToken.None).ConfigureAwait(false);
+            FileHandle.Operation operation = (await handles.AcquireAsync(s_session, writer, 1, CancellationToken.None)
+                .ConfigureAwait(false))!;
+            var cancelled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using CancellationTokenRegistration registration =
+                operation.CancellationToken.Register(() => cancelled.TrySetResult(true));
+            try
+            {
+                handles.CloseSession(s_session, defer: false);
+                await cancelled.Task.WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                Assert.That(operation.CancellationToken.IsCancellationRequested, Is.True);
+                Assert.That(handles.CleanupCompletion.IsCompleted, Is.False);
+                Assert.That(stream.CanRead, Is.True);
+                (ServiceResult blocked, _) = await handles.OpenAsync(s_other, 3, CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(blocked.StatusCode, Is.EqualTo(StatusCodes.BadInvalidState));
+            }
+            finally
+            {
+                operation.Dispose();
+            }
+            await handles.CleanupCompletion.ConfigureAwait(false);
+            Assert.That(stream.CanRead, Is.False);
+            Assert.That(handles.TryBlockOpens(), Is.True);
+            handles.UnblockOpens();
+        }
+
+        /// <summary>
+        /// Inline cleanup never runs or waits for an active application's blocking cancellation callback.
+        /// </summary>
+        [Test]
+        public async Task InlineSessionClosureDoesNotWaitForBlockingCancellationCallbackAsync()
+        {
+            using var stream = new MemoryStream();
+            using var release = new ManualResetEventSlim();
+            await using var handles = new FileHandle(Provider(stream).Object, "file");
+            (_, uint writer) = await handles.OpenAsync(s_session, 3, CancellationToken.None).ConfigureAwait(false);
+            FileHandle.Operation operation = (await handles.AcquireAsync(s_session, writer, 1, CancellationToken.None)
+                .ConfigureAwait(false))!;
+            var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using CancellationTokenRegistration registration = operation.CancellationToken.Register(() =>
+            {
+                entered.TrySetResult(true);
+                if (!release.Wait(TimeSpan.FromSeconds(10)))
+                {
+                    throw new TimeoutException("The test did not release the cancellation callback.");
+                }
+            });
+            try
+            {
+                handles.CloseSession(s_session, defer: false);
+                await entered.Task.WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                Assert.That(handles.CleanupCompletion.IsCompleted, Is.False);
+                Assert.That(stream.CanRead, Is.True);
+                Assert.That(handles.TryBlockOpens(), Is.False);
+                (ServiceResult blocked, _) = await handles.OpenAsync(s_other, 1, CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(blocked.StatusCode, Is.EqualTo(StatusCodes.BadNotReadable));
+            }
+            finally
+            {
+                release.Set();
+                operation.Dispose();
+            }
+            await handles.CleanupCompletion.ConfigureAwait(false);
+            Assert.That(stream.CanRead, Is.False);
+        }
+
+        /// <summary>
         /// Explicit close stops admission but drains even operations already queued behind an active cursor owner.
         /// </summary>
         [Test]
