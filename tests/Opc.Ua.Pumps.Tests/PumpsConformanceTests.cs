@@ -374,6 +374,30 @@ namespace Opc.Ua.Pumps.Tests
         }
 
         /// <summary>
+        /// A live retained identity must still contain an absolute URI string.
+        /// </summary>
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task PumpBaseProfileWithdrawsWhenRetainedIdentityValueIsInvalidAsync(bool nonString)
+        {
+            SetServerProfiles(PumpBaseServerProfilePrerequisites);
+            IPumpBuilder pump = await CreateAsync("InvalidRetainedIdentity");
+            const string originalUri = "urn:example:pump:invalid-retained-identity";
+            pump.Identification.Set(Opc.Ua.Di.BrowseNames.ProductInstanceUri, Variant.From(originalUri));
+            await m_fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                pump, PersistentStore().Object, WritableIdentityPermissions);
+
+            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+            var identity = (BaseVariableState)pump.Identification.Child(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri)!;
+            identity.WrappedValue = nonString ? Variant.From(42) : Variant.From("relative-identity");
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.False);
+            identity.WrappedValue = Variant.From(originalUri);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+        }
+
+        /// <summary>
         /// A retained identity must remain non-writable through access flags and installed handlers.
         /// </summary>
         [TestCase(0)]
