@@ -673,6 +673,40 @@ namespace Opc.Ua.PackML.Tests
                 ObjectTypeIds.PackMLBaseObjectType, m_session.NamespaceUris)));
         }
 
+        /// <summary>
+        /// Verifies the standalone unit is organized by the PackMLObjects folder required by OPC 30050.
+        /// </summary>
+        [Test]
+        public async Task StandaloneUnitIsOrganizedBelowPackMLObjectsAsync()
+        {
+            var browser = new Browser(m_session, new BrowserOptions
+            {
+                BrowseDirection = BrowseDirection.Forward,
+                ReferenceTypeId = Ua.ReferenceTypeIds.Organizes,
+                IncludeSubtypes = false,
+                NodeClassMask = (int)NodeClass.Object
+            });
+            int packMLNamespace = m_session.NamespaceUris.GetIndex(Namespaces.PackML);
+            Assert.That(packMLNamespace, Is.GreaterThanOrEqualTo(0));
+            ArrayOf<ReferenceDescription> roots = await browser.BrowseAsync(Ua.ObjectIds.ObjectsFolder);
+            ReferenceDescription[] folders = roots.ToList()
+                .Where(reference => reference.BrowseName.Name == "PackMLObjects" &&
+                    reference.BrowseName.NamespaceIndex == packMLNamespace)
+                .ToArray();
+            Assert.That(folders, Has.Length.EqualTo(1));
+            Assert.That(
+                ExpandedNodeId.ToNodeId(folders[0].TypeDefinition, m_session.NamespaceUris),
+                Is.EqualTo(Ua.ObjectTypeIds.FolderType));
+
+            NodeId folder = ExpandedNodeId.ToNodeId(folders[0].NodeId, m_session.NamespaceUris);
+            Assert.That(folder.IsNull, Is.False);
+            ArrayOf<ReferenceDescription> contents = await browser.BrowseAsync(folder);
+            Assert.That(
+                contents.ToList().Select(reference =>
+                    ExpandedNodeId.ToNodeId(reference.NodeId, m_session.NamespaceUris)),
+                Does.Contain(m_unit.Node.NodeId));
+        }
+
         [Test]
         public async Task WireStructuredOperationsDecodeConcreteProductsAndParameters()
         {
