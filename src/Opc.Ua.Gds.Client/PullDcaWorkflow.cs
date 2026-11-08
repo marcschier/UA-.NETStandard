@@ -718,22 +718,18 @@ namespace Opc.Ua.Gds.Client
                 }
                 ValidateProfile(application.CertificateProfile);
                 ApplicationRecordDataType record = application.Application;
-                var snapshotRecord = new ApplicationRecordDataType
-                {
-                    ApplicationId = PullDcaConnection.SnapshotNodeId(record.ApplicationId),
-                    ApplicationUri = record.ApplicationUri,
-                    ApplicationType = record.ApplicationType,
-                    ProductUri = record.ProductUri,
-                    DiscoveryUrls = record.DiscoveryUrls.ToArray().ToArrayOf(),
-                    ServerCapabilities = record.ServerCapabilities.ToArray().ToArrayOf()
-                };
-                if (!record.ApplicationNames.IsNull)
-                {
-                    snapshotRecord.ApplicationNames = SnapshotApplicationNames(record.ApplicationNames);
-                }
                 applications[i] = application with
                 {
-                    Application = snapshotRecord,
+                    Application = new ApplicationRecordDataType
+                    {
+                        ApplicationId = PullDcaConnection.SnapshotNodeId(record.ApplicationId),
+                        ApplicationUri = record.ApplicationUri,
+                        ApplicationType = record.ApplicationType,
+                        ApplicationNames = SnapshotApplicationNames(record.ApplicationNames),
+                        ProductUri = record.ProductUri,
+                        DiscoveryUrls = record.DiscoveryUrls.ToArray().ToArrayOf(),
+                        ServerCapabilities = record.ServerCapabilities.ToArray().ToArrayOf()
+                    },
                     CertificateProfile = PullDcaConnection.SnapshotProfile(application.CertificateProfile),
                     CertificateRequestMode = ValidateRequestMode(application.CertificateRequestMode)
                 };
