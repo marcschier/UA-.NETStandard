@@ -321,26 +321,36 @@ namespace Opc.Ua.Client.Tests.SessionContexts
         }
 
         /// <summary>
-        /// A channel without an endpoint description cannot supply transport identity.
+        /// Confidential capture rejects missing physical metadata; ordinary capture retains configured metadata.
         /// </summary>
         [TestCase(false)]
         [TestCase(true)]
-        public async Task CapturingChannelWithoutEndpointIsRejected(bool confidential)
+        public async Task CapturingChannelWithoutEndpointPreservesCapturePolicy(bool confidential)
         {
             await using var fixture = new SessionRequestContextTestContext(
                 securityMode: MessageSecurityMode.SignAndEncrypt);
             fixture.Channel.SetupGet(channel => channel.EndpointDescription).Returns((EndpointDescription)null!);
 
-            ServiceResultException failure = (await Assert.ThrowsAsync<ServiceResultException>(async () =>
+            if (confidential)
             {
-                await using SessionRequestContext context = confidential
-                    ? await SessionRequestContext.CaptureConfidentialAsync(fixture.ManagedSession).ConfigureAwait(false)
-                    : await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
-            }))!;
-
-            Assert.That(failure.StatusCode, Is.EqualTo(confidential
-                ? StatusCodes.BadSecurityModeInsufficient
-                : StatusCodes.BadSecurityChecksFailed));
+                ServiceResultException failure = (await Assert.ThrowsAsync<ServiceResultException>(async () =>
+                {
+                    await using SessionRequestContext context =
+                        await SessionRequestContext.CaptureConfidentialAsync(fixture.ManagedSession)
+                            .ConfigureAwait(false);
+                }))!;
+                Assert.That(failure.StatusCode, Is.EqualTo(StatusCodes.BadSecurityModeInsufficient));
+            }
+            else
+            {
+                await using SessionRequestContext context =
+                    await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
+                EndpointDescription captured = context.Session.TransportChannel.EndpointDescription;
+                Assert.That(captured, Is.Not.SameAs(fixture.InnerSession.ConfiguredEndpoint.Description));
+                Assert.That(captured.EndpointUrl, Is.EqualTo("opc.tcp://localhost:4840"));
+                Assert.That(captured.Server.ApplicationUri, Is.EqualTo("urn:request-context:server"));
+                Assert.That(context.Invalidated.IsCompleted, Is.False);
+            }
             Assert.That(fixture.Requests, Is.Empty);
         }
 
@@ -378,23 +388,35 @@ namespace Opc.Ua.Client.Tests.SessionContexts
         }
 
         /// <summary>
-        /// A null token policy is rejected during capture.
+        /// Capture preserves null token policy entries in configured and physical metadata.
         /// </summary>
-        [Test]
-        public async Task CapturingEndpointWithNullTokenPolicyIsRejected()
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task CapturingEndpointPreservesNullTokenPolicy(bool confidential)
         {
-            await using var fixture = new SessionRequestContextTestContext();
-            var endpoint = new EndpointDescription();
-            endpoint.UserIdentityTokens = new UserTokenPolicy[] { null! };
-            fixture.Channel.SetupGet(channel => channel.EndpointDescription).Returns(endpoint);
+            await using var fixture = new SessionRequestContextTestContext(
+                securityMode: MessageSecurityMode.SignAndEncrypt);
+            var policy = new ProviderUserTokenPolicy { PolicyId = "original" };
+            UserTokenPolicy[] policies = [null!, policy];
+            fixture.InnerSession.ConfiguredEndpoint.Description.UserIdentityTokens = policies;
 
-            ServiceResultException failure = (await Assert.ThrowsAsync<ServiceResultException>(async () =>
-            {
-                await using SessionRequestContext context =
-                    await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
-            }))!;
+            await using SessionRequestContext context = confidential
+                ? await SessionRequestContext.CaptureConfidentialAsync(fixture.ManagedSession).ConfigureAwait(false)
+                : await SessionRequestContext.CaptureAsync(fixture.ManagedSession).ConfigureAwait(false);
+            policy.PolicyId = "changed";
+            policies[0] = new UserTokenPolicy();
 
-            Assert.That(failure.StatusCode, Is.EqualTo(StatusCodes.BadSecurityChecksFailed));
+            EndpointDescription configured = context.Session.ConfiguredEndpoint.Description;
+            EndpointDescription physical = context.Session.TransportChannel.EndpointDescription;
+            Assert.That(configured.UserIdentityTokens.Count, Is.EqualTo(2));
+            Assert.That(physical.UserIdentityTokens.Count, Is.EqualTo(2));
+            Assert.That(configured.UserIdentityTokens[0], Is.Null);
+            Assert.That(physical.UserIdentityTokens[0], Is.Null);
+            Assert.That(configured.UserIdentityTokens[1], Is.Not.SameAs(policy));
+            Assert.That(physical.UserIdentityTokens[1], Is.Not.SameAs(policy));
+            Assert.That(configured.UserIdentityTokens[1].PolicyId, Is.EqualTo("original"));
+            Assert.That(physical.UserIdentityTokens[1].PolicyId, Is.EqualTo("original"));
+            Assert.That(context.Invalidated.IsCompleted, Is.False);
             Assert.That(fixture.Requests, Is.Empty);
         }
 

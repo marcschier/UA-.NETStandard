@@ -84,7 +84,7 @@ namespace Opc.Ua.Client
             m_namespaceUris = session.NamespaceUris.ToArrayOf();
             m_serverUris = session.ServerUris.ToArrayOf();
             m_messageContext = new ServiceMessageContext(session.MessageContext, session.MessageContext.Telemetry);
-            m_endpoint = SnapshotEndpoint(endpoint);
+            m_endpoint = SnapshotEndpoint(endpoint ?? session.ConfiguredEndpoint.Description);
             m_endpointConfiguration = SnapshotEndpointConfiguration(session.ConfiguredEndpoint.Configuration)
                 ?? EndpointConfiguration.Create();
             m_requestTransport = new RequestContextTransport(this);
@@ -128,8 +128,6 @@ namespace Opc.Ua.Client
         /// <remarks>
         /// Ordinary or custom <see cref="ISession"/> implementations are rejected: their lifecycle cannot be
         /// synchronized by this API. Custom transports must not be independently retargeted outside their owner.
-        /// The physical transport must supply an endpoint and server description. Null entries in the token policy
-        /// array are rejected.
         /// Reuse the returned <see cref="Session"/> across later cursor or handle operations; do not capture again.
         /// </remarks>
         /// <exception cref="ArgumentNullException"></exception>
@@ -343,9 +341,7 @@ namespace Opc.Ua.Client
                     StatusCodes.BadSecurityChecksFailed, "The captured transport has no endpoint description.");
             }
 
-            ApplicationDescription application = source.Server ??
-                throw new ServiceResultException(
-                    StatusCodes.BadSecurityChecksFailed, "The captured endpoint has no server description.");
+            ApplicationDescription application = source.Server ?? new ApplicationDescription();
             ArrayOf<string> discoveryUrls = application.DiscoveryUrls;
             ArrayOf<LocalizedText> names = application.ApplicationNames;
             LocalizedText[] copiedNames = names.Span.ToArray();
@@ -357,9 +353,12 @@ namespace Opc.Ua.Client
             var policies = new UserTokenPolicy[sourcePolicies.Count];
             for (int i = 0; i < policies.Length; i++)
             {
-                UserTokenPolicy policy = sourcePolicies[i] ??
-                    throw new ServiceResultException(
-                        StatusCodes.BadSecurityChecksFailed, "The captured endpoint has an invalid token policy.");
+                UserTokenPolicy? policy = sourcePolicies[i];
+                if (policy == null)
+                {
+                    policies[i] = null!;
+                    continue;
+                }
                 policies[i] = new UserTokenPolicy
                 {
                     PolicyId = policy.PolicyId,
