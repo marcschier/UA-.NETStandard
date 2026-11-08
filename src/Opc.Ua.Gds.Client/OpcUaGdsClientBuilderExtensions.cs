@@ -335,17 +335,25 @@ namespace Microsoft.Extensions.DependencyInjection
                 Func<CancellationToken, Task<ManagedSession>> accessor = GetManagedSessionAccessor(sp);
                 return (_, ct) => new ValueTask<ManagedSession>(accessor(ct));
             });
-            builder.Services.TryAddSingleton(sp => new PullDcaWorkflow(
-                sp.GetRequiredService<IOptions<PullDcaOptions>>().Value,
-                sp.GetRequiredService<Func<PullDcaRegistrar, CancellationToken, ValueTask<ManagedSession>>>(),
-                sp.GetRequiredService<IPullDcaIdentityProvider>(),
-                sp.GetRequiredService<IPullDcaCredentialProvider>(),
-                sp.GetRequiredService<ITelemetryContext>(),
-                sp.GetService<IPullDcaSoftwareUpdateProvider>(),
-                sp.GetService<IPullDcaRegistrarDiscovery>(),
-                sp.GetService<IPullDcaCertificateReceiptStore>(),
-                sp.GetService<IPullDcaSigningRecoveryProvider>(),
-                sp.GetService<IPullDcaNewKeyPairCredentialProvider>()));
+            builder.Services.TryAddSingleton(sp =>
+            {
+                PullDcaOptions options = sp.GetRequiredService<IOptions<PullDcaOptions>>().Value;
+                Func<PullDcaRegistrar, CancellationToken, ValueTask<ManagedSession>> accessor =
+                    sp.GetRequiredService<Func<PullDcaRegistrar, CancellationToken, ValueTask<ManagedSession>>>();
+                IPullDcaIdentityProvider identity = sp.GetRequiredService<IPullDcaIdentityProvider>();
+                IPullDcaCredentialProvider credentials = sp.GetRequiredService<IPullDcaCredentialProvider>();
+                ITelemetryContext telemetry = sp.GetRequiredService<ITelemetryContext>();
+                IPullDcaNewKeyPairCredentialProvider? keyPair = sp.GetService<IPullDcaNewKeyPairCredentialProvider>();
+                IPullDcaSoftwareUpdateProvider? software = sp.GetService<IPullDcaSoftwareUpdateProvider>();
+                IPullDcaRegistrarDiscovery? discovery = sp.GetService<IPullDcaRegistrarDiscovery>();
+                IPullDcaCertificateReceiptStore? receipts = sp.GetService<IPullDcaCertificateReceiptStore>();
+                IPullDcaSigningRecoveryProvider? recovery = sp.GetService<IPullDcaSigningRecoveryProvider>();
+                return keyPair == null
+                    ? new PullDcaWorkflow(options, accessor, identity, credentials, telemetry,
+                        software, discovery, receipts, recovery)
+                    : new PullDcaWorkflow(options, keyPair, accessor, identity, credentials, telemetry,
+                        software, discovery, receipts, recovery);
+            });
             return builder;
         }
 

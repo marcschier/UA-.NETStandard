@@ -55,8 +55,33 @@ namespace Opc.Ua.Gds.Client
             IPullDcaSoftwareUpdateProvider? softwareUpdateProvider = null,
             IPullDcaRegistrarDiscovery? discovery = null,
             IPullDcaCertificateReceiptStore? receipts = null,
-            IPullDcaSigningRecoveryProvider? signingRecovery = null,
-            IPullDcaNewKeyPairCredentialProvider? newKeyPairCredentialProvider = null)
+            IPullDcaSigningRecoveryProvider? signingRecovery = null)
+            : this(
+                options,
+                CreateConnectionFactory(options, sessionAccessor, telemetry),
+                identityProvider,
+                credentialProvider,
+                softwareUpdateProvider,
+                discovery,
+                receipts,
+                signingRecovery)
+        {
+        }
+
+        /// <summary>
+        /// Creates a workflow with a separately supplied new key-pair credential provider.
+        /// </summary>
+        public PullDcaWorkflow(
+            PullDcaOptions options,
+            IPullDcaNewKeyPairCredentialProvider newKeyPairCredentialProvider,
+            Func<PullDcaRegistrar, CancellationToken, ValueTask<ManagedSession>> sessionAccessor,
+            IPullDcaIdentityProvider identityProvider,
+            IPullDcaCredentialProvider credentialProvider,
+            ITelemetryContext telemetry,
+            IPullDcaSoftwareUpdateProvider? softwareUpdateProvider = null,
+            IPullDcaRegistrarDiscovery? discovery = null,
+            IPullDcaCertificateReceiptStore? receipts = null,
+            IPullDcaSigningRecoveryProvider? signingRecovery = null)
             : this(
                 options,
                 CreateConnectionFactory(options, sessionAccessor, telemetry),
@@ -66,7 +91,7 @@ namespace Opc.Ua.Gds.Client
                 discovery,
                 receipts,
                 signingRecovery,
-                newKeyPairCredentialProvider)
+                newKeyPairCredentialProvider ?? throw new ArgumentNullException(nameof(newKeyPairCredentialProvider)))
         {
         }
 

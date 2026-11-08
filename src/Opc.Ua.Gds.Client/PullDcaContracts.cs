@@ -107,8 +107,13 @@ namespace Opc.Ua.Gds.Client
     public sealed record PullDcaManagedApplication(
         ApplicationRecordDataType Application,
         string ProtocolUri,
-        PullDcaCertificateProfile CertificateProfile,
-        PullDcaCertificateRequestMode CertificateRequestMode = PullDcaCertificateRequestMode.SigningRequest);
+        PullDcaCertificateProfile CertificateProfile)
+    {
+        /// <summary>
+        /// Gets the certificate request mode for this application.
+        /// </summary>
+        public PullDcaCertificateRequestMode CertificateRequestMode { get; init; }
+    }
 
     /// <summary>
     /// Selects whether the registrar signs a locally generated key or creates a new key pair.
@@ -132,9 +137,13 @@ namespace Opc.Ua.Gds.Client
     public sealed record PullDcaRequest(
         PullDcaIdentityOffer IdentityOffer,
         PullDcaCertificateProfile DcaCertificateProfile,
-        ArrayOf<PullDcaManagedApplication> ManagedApplications,
-        PullDcaCertificateRequestMode DcaCertificateRequestMode =
-            PullDcaCertificateRequestMode.SigningRequest);
+        ArrayOf<PullDcaManagedApplication> ManagedApplications)
+    {
+        /// <summary>
+        /// Gets the certificate request mode for the DCA.
+        /// </summary>
+        public PullDcaCertificateRequestMode DcaCertificateRequestMode { get; init; }
+    }
 
     /// <summary>
     /// A locally generated key's issued certificate, issuer chain and downloaded trust list.
