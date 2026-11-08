@@ -36,6 +36,7 @@ using NUnit.Framework;
 using Opc.Ua.AutoID.Client;
 using Opc.Ua.Client;
 using Opc.Ua.Client.Subscriptions;
+using Opc.Ua.Client.Subscriptions.MonitoredItems;
 using Opc.Ua.Client.Subscriptions.Streaming;
 using Opc.Ua.Tests;
 
@@ -81,7 +82,7 @@ namespace Opc.Ua.AutoID.Tests
             var streaming = new Mock<IStreamingSubscription>(MockBehavior.Strict);
             streaming.Setup(value => value.SubscribeDataChangesAsync(
                     It.IsAny<NodeId>(),
-                    It.IsAny<MonitoredItems.MonitoredItemOptions?>(),
+                    It.IsAny<MonitoredItemOptions?>(),
                     It.IsAny<CancellationToken>()))
                 .Returns(EmptyChanges());
 
@@ -92,7 +93,7 @@ namespace Opc.Ua.AutoID.Tests
             Assert.That(await changes.MoveNextAsync().ConfigureAwait(false), Is.False);
             streaming.Verify(value => value.SubscribeDataChangesAsync(
                 It.IsAny<NodeId>(),
-                It.IsAny<MonitoredItems.MonitoredItemOptions?>(),
+                It.IsAny<MonitoredItemOptions?>(),
                 It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -282,7 +283,7 @@ namespace Opc.Ua.AutoID.Tests
             bool includeAutoIdNamespace = true)
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
-            IServiceMessageContext messageContext = ServiceMessageContext.Create(telemetry);
+            ServiceMessageContext messageContext = ServiceMessageContext.Create(telemetry);
             ushort namespaceIndex = includeAutoIdNamespace
                 ? checked((ushort)messageContext.NamespaceUris.GetIndexOrAppend(AutoIdModel.NamespaceUri))
                 : (ushort)1;
