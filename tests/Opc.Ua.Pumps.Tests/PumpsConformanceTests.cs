@@ -374,6 +374,103 @@ namespace Opc.Ua.Pumps.Tests
         }
 
         /// <summary>
+        /// A retained identity must remain non-writable through access flags and installed handlers.
+        /// </summary>
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public async Task PumpBaseProfileWithdrawsWhenProductInstanceUriBecomesWritableAsync(int writePath)
+        {
+            SetServerProfiles(PumpBaseServerProfilePrerequisites);
+            IPumpBuilder pump = await CreateAsync("WritableProductInstanceUri");
+            pump.Identification.Set(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri,
+                Variant.From("urn:example:pump:writable-identity"));
+            await m_fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                pump, PersistentStore().Object, WritableIdentityPermissions);
+
+            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+            var identity = (BaseVariableState)pump.Identification.Child(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri)!;
+            byte originalAccess = identity.AccessLevel;
+            byte originalUserAccess = identity.UserAccessLevel;
+            var originalWriteHandler = identity.OnSimpleWriteValueAsync;
+            switch (writePath)
+            {
+                case 0:
+                    identity.AccessLevel |= AccessLevels.CurrentWrite;
+                    break;
+                case 1:
+                    identity.UserAccessLevel |= AccessLevels.CurrentWrite;
+                    break;
+                case 2:
+                    var location = (BaseVariableState)pump.Identification.Child(
+                        Opc.Ua.Machinery.BrowseNames.Location)!;
+                    Assert.That(location.OnSimpleWriteValueAsync, Is.Not.Null);
+                    identity.OnSimpleWriteValueAsync = location.OnSimpleWriteValueAsync;
+                    break;
+            }
+
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.False);
+            identity.AccessLevel = originalAccess;
+            identity.UserAccessLevel = originalUserAccess;
+            identity.OnSimpleWriteValueAsync = originalWriteHandler;
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+        }
+
+        /// <summary>
+        /// A binding registered for another pump cannot establish retained identity for the current pump.
+        /// </summary>
+        [Test]
+        public async Task PumpBaseProfileRejectsAnotherPumpsRetainedIdentityAsync()
+        {
+            SetServerProfiles(PumpBaseServerProfilePrerequisites);
+            IPumpBuilder first = await CreateAsync("FirstRetainedIdentity");
+            IPumpBuilder second = await CreateAsync("SecondRetainedIdentity");
+            const string firstUri = "urn:example:pump:first-retained-identity";
+            const string secondUri = "urn:example:pump:second-retained-identity";
+            first.Identification.Set(Opc.Ua.Di.BrowseNames.ProductInstanceUri, Variant.From(firstUri));
+            second.Identification.Set(Opc.Ua.Di.BrowseNames.ProductInstanceUri, Variant.From(secondUri));
+            await m_fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                first, PersistentStore().Object, WritableIdentityPermissions);
+            await m_fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                second, PersistentStore().Object, WritableIdentityPermissions);
+
+            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+            var identity = (BaseVariableState)first.Identification.Child(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri)!;
+            identity.WrappedValue = Variant.From(secondUri);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.False);
+            identity.WrappedValue = Variant.From(firstUri);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+        }
+
+        /// <summary>
+        /// Profile publication follows the binding store's current persistence capability.
+        /// </summary>
+        [Test]
+        public async Task PumpBaseProfileWithdrawsWhenIdentityStoreLosesPersistenceAsync()
+        {
+            SetServerProfiles(PumpBaseServerProfilePrerequisites);
+            IPumpBuilder pump = await CreateAsync("StorePersistence");
+            pump.Identification.Set(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri,
+                Variant.From("urn:example:pump:store-persistence"));
+            Mock<IAssetConfigurationStore> store = PersistentStore();
+            await m_fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                pump, store.Object, WritableIdentityPermissions);
+
+            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+            store.SetupGet(value => value.IsPersistent).Returns(false);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.False);
+            store.SetupGet(value => value.IsPersistent).Returns(true);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
+        }
+
+        /// <summary>
         /// Pump Base requires the actual Machinery Machines relationship, not only identity configuration.
         /// </summary>
         [Test]
