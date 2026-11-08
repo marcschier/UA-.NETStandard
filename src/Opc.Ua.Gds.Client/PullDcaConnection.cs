@@ -206,6 +206,40 @@ namespace Opc.Ua.Gds.Client
         }
 
         /// <summary>
+        /// Detaches opaque registrar and directory identifiers.
+        /// </summary>
+        internal static PullDcaRegistrar SnapshotRegistrar(PullDcaRegistrar registrar)
+        {
+            return registrar with
+            {
+                RegistrarId = SnapshotNodeId(registrar.RegistrarId),
+                CertificateDirectoryId = SnapshotNodeId(registrar.CertificateDirectoryId)
+            };
+        }
+
+        /// <summary>
+        /// Detaches opaque certificate group and type identifiers.
+        /// </summary>
+        internal static PullDcaCertificateProfile SnapshotProfile(PullDcaCertificateProfile profile)
+        {
+            return profile with
+            {
+                CertificateGroupId = SnapshotNodeId(profile.CertificateGroupId),
+                CertificateTypeId = SnapshotNodeId(profile.CertificateTypeId)
+            };
+        }
+
+        /// <summary>
+        /// Copies an opaque node identifier without changing its namespace or null semantics.
+        /// </summary>
+        internal static NodeId SnapshotNodeId(NodeId id)
+        {
+            return id.TryGetValue(out ByteString bytes)
+                ? new NodeId(bytes.Copy(), id.NamespaceIndex)
+                : id;
+        }
+
+        /// <summary>
         /// Borrowed session; its factory alone owns disposal.
         /// </summary>
         private readonly ISession m_session;
