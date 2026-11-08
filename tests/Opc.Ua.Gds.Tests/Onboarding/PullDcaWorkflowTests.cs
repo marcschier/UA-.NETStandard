@@ -202,8 +202,7 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                 new PullDcaOptions(),
                 connectionFactory,
                 fixture.Host,
-                credentialProvider.Object,
-                NUnitTelemetryContext.Create());
+                credentialProvider.Object);
             PullDcaRequest request = CreateRequest() with
             {
                 DcaCertificateRequestMode = PullDcaCertificateRequestMode.NewKeyPairRequest
@@ -264,50 +263,6 @@ namespace Opc.Ua.Gds.Tests.Onboarding
 
             Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSecurityChecksFailed));
             Assert.That(fixture.Host.KeyPairInstalledIds, Is.Empty);
-        }
-
-        [Test]
-        public async Task NewKeyPairFinishRequiresConfidentialDispatchBeforeReturningPrivateKey()
-        {
-            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
-            ServiceMessageContext context = ServiceMessageContext.Create(telemetry);
-            context.NamespaceUris.GetIndexOrAppend(Opc.Ua.Gds.Namespaces.OpcUaGds);
-            Mock<ISession> session = CreateSession(context, _ => throw new AssertionException("Unexpected dispatch."));
-            var adapter = new PullDcaConnection(
-                session.Object,
-                kRegistrar,
-                telemetry,
-                1024,
-                _ => default,
-                _ => throw new ServiceResultException(StatusCodes.BadSecurityModeInsufficient));
-
-            ServiceResultException? error = await Assert.ThrowsAsync<ServiceResultException>(async () =>
-                await adapter.FinishNewKeyPairAsync(
-                    new NodeId(1), new NodeId(2), CancellationToken.None).ConfigureAwait(false));
-
-            Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSecurityModeInsufficient));
-        }
-
-        [Test]
-        public async Task NewKeyPairStartRequiresConfidentialDispatchBeforeCreatingRequest()
-        {
-            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
-            ServiceMessageContext context = ServiceMessageContext.Create(telemetry);
-            context.NamespaceUris.GetIndexOrAppend(Opc.Ua.Gds.Namespaces.OpcUaGds);
-            Mock<ISession> session = CreateSession(context, _ => throw new AssertionException("Unexpected dispatch."));
-            var adapter = new PullDcaConnection(
-                session.Object,
-                kRegistrar,
-                telemetry,
-                1024,
-                _ => default,
-                _ => throw new ServiceResultException(StatusCodes.BadSecurityModeInsufficient));
-
-            ServiceResultException? error = await Assert.ThrowsAsync<ServiceResultException>(async () =>
-                await adapter.StartNewKeyPairAsync(
-                    new NodeId(1), kProfile, CancellationToken.None).ConfigureAwait(false));
-
-            Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSecurityModeInsufficient));
         }
 
         [Test]
@@ -1985,6 +1940,39 @@ namespace Opc.Ua.Gds.Tests.Onboarding
     [Category("Onboarding")]
     public sealed class PullDcaConnectionTests
     {
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task NewKeyPairRequestsRequireConfidentialDispatch(bool finish)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+            ServiceMessageContext context = ServiceMessageContext.Create(telemetry);
+            context.NamespaceUris.GetIndexOrAppend(Opc.Ua.Gds.Namespaces.OpcUaGds);
+            Mock<ISession> session = CreateSession(context, _ => throw new AssertionException("Unexpected dispatch."));
+            var adapter = new PullDcaConnection(
+                session.Object,
+                kRegistrar,
+                telemetry,
+                1024,
+                _ => default,
+                _ => throw new ServiceResultException(StatusCodes.BadSecurityModeInsufficient));
+
+            ServiceResultException? error = await Assert.ThrowsAsync<ServiceResultException>(async () =>
+            {
+                if (finish)
+                {
+                    await adapter.FinishNewKeyPairAsync(
+                        new NodeId(1), new NodeId(2), CancellationToken.None).ConfigureAwait(false);
+                }
+                else
+                {
+                    await adapter.StartNewKeyPairAsync(
+                        new NodeId(1), kProfile, CancellationToken.None).ConfigureAwait(false);
+                }
+            });
+
+            Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSecurityModeInsufficient));
+        }
+
         [Test]
         public async Task ProductionAdapterUsesGeneratedRegistrarAndCertificateDirectoryMethods()
         {
