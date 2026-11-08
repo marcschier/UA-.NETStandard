@@ -143,6 +143,7 @@ namespace Opc.Ua.Gds.Client
             CancellationToken cancellationToken = default)
         {
             ValidateRegistrar(registrar);
+            registrar = PullDcaConnection.SnapshotRegistrar(registrar);
             request = SnapshotRequest(request);
             cancellationToken.ThrowIfCancellationRequested();
             if (Interlocked.CompareExchange(ref m_running, 1, 0) != 0)
@@ -214,6 +215,7 @@ namespace Opc.Ua.Gds.Client
             CancellationToken cancellationToken = default)
         {
             ValidateRegistrar(registrar);
+            registrar = PullDcaConnection.SnapshotRegistrar(registrar);
             managedApplications = SnapshotManagedApplications(managedApplications);
             cancellationToken.ThrowIfCancellationRequested();
             if (Interlocked.CompareExchange(ref m_running, 1, 0) != 0)
@@ -260,6 +262,10 @@ namespace Opc.Ua.Gds.Client
             {
                 throw new ArgumentException("Persisted application and request identifiers are required.");
             }
+            registrar = PullDcaConnection.SnapshotRegistrar(registrar);
+            applicationId = PullDcaConnection.SnapshotNodeId(applicationId);
+            requestId = PullDcaConnection.SnapshotNodeId(requestId);
+            profile = PullDcaConnection.SnapshotProfile(profile);
             cancellationToken.ThrowIfCancellationRequested();
             if (Interlocked.CompareExchange(ref m_running, 1, 0) != 0)
             {
@@ -365,6 +371,8 @@ namespace Opc.Ua.Gds.Client
                 throw new ServiceResultException(
                     StatusCodes.BadConfigurationError, "The signing receipt contains no issued certificate.");
             }
+            receipt = new PullDcaCertificateReceipt(
+                receipt.Certificate.Copy(), SnapshotBytes(receipt.IssuerCertificates));
             ct.ThrowIfCancellationRequested();
             Report(progress, PullDcaStage.ReadingTrustList, applicationId, requestId);
             TrustListDataType trustList = await connection.ReadTrustListAsync(
@@ -561,6 +569,7 @@ namespace Opc.Ua.Gds.Client
                     SnapshotBytes(request.IdentityOffer.Identities),
                     SnapshotBytes(request.IdentityOffer.Issuers),
                     request.IdentityOffer.Tickets.ToArray().ToArrayOf()),
+                DcaCertificateProfile = PullDcaConnection.SnapshotProfile(request.DcaCertificateProfile),
                 ManagedApplications = SnapshotManagedApplications(request.ManagedApplications)
             };
         }
@@ -589,17 +598,36 @@ namespace Opc.Ua.Gds.Client
                 {
                     Application = new ApplicationRecordDataType
                     {
-                        ApplicationId = record.ApplicationId,
+                        ApplicationId = PullDcaConnection.SnapshotNodeId(record.ApplicationId),
                         ApplicationUri = record.ApplicationUri,
                         ApplicationType = record.ApplicationType,
-                        ApplicationNames = record.ApplicationNames.ToArray().ToArrayOf(),
+                        ApplicationNames = SnapshotApplicationNames(record.ApplicationNames),
                         ProductUri = record.ProductUri,
                         DiscoveryUrls = record.DiscoveryUrls.ToArray().ToArrayOf(),
                         ServerCapabilities = record.ServerCapabilities.ToArray().ToArrayOf()
-                    }
+                    },
+                    CertificateProfile = PullDcaConnection.SnapshotProfile(application.CertificateProfile)
                 };
             }
             return applications;
+        }
+
+        /// <summary>
+        /// Copies localized names without changing null or empty arrays or retaining caller-owned translation state.
+        /// </summary>
+        private static ArrayOf<LocalizedText> SnapshotApplicationNames(ArrayOf<LocalizedText> applicationNames)
+        {
+            if (applicationNames.IsNull)
+            {
+                return applicationNames;
+            }
+
+            LocalizedText[] snapshot = applicationNames.Span.ToArray();
+            for (int i = 0; i < snapshot.Length; i++)
+            {
+                snapshot[i] = snapshot[i].Copy();
+            }
+            return snapshot.ToArrayOf();
         }
 
         /// <summary>
@@ -607,10 +635,14 @@ namespace Opc.Ua.Gds.Client
         /// </summary>
         private static ArrayOf<ByteString> SnapshotBytes(ArrayOf<ByteString> values)
         {
+            if (values.IsNull)
+            {
+                return default;
+            }
             var detached = new ByteString[values.Count];
             for (int i = 0; i < values.Count; i++)
             {
-                detached[i] = ByteString.From(values[i].Span);
+                detached[i] = values[i].Copy();
             }
             return detached;
         }
