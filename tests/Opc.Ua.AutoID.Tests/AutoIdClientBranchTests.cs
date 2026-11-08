@@ -158,20 +158,21 @@ namespace Opc.Ua.AutoID.Tests
             Assert.That(error.StatusCode, Is.EqualTo((StatusCode)StatusCodes.BadBrowseNameDuplicated));
         }
 
-        [TestCase("not-bool", StatusCodes.Good, StatusCodes.BadTypeMismatch)]
-        [TestCase("true", StatusCodes.BadUserAccessDenied, StatusCodes.BadUserAccessDenied)]
+        [TestCase("not-bool", false)]
+        [TestCase("true", true)]
         public async Task ReadScanActivePreservesBadStatusesAndRejectsWrongValueTypesAsync(
             string value,
-            uint valueStatus,
-            uint expectedStatus)
+            bool accessDenied)
         {
+            StatusCode valueStatus = accessDenied ? StatusCodes.BadUserAccessDenied : StatusCodes.Good;
+            StatusCode expectedStatus = accessDenied ? StatusCodes.BadUserAccessDenied : StatusCodes.BadTypeMismatch;
             (Mock<ISession> session, AutoIdClient client, ushort namespaceIndex) = CreateClient();
             NodeId scanActiveId = new("scan-active", namespaceIndex);
             SetupBrowse(session, _ =>
                 [Child(BrowseNames.ScanActive, NodeClass.Variable, namespaceIndex, scanActiveId)]);
             SetupRead(session, _ =>
             [
-                new DataValue(Variant.From(value), (StatusCode)valueStatus)
+                new DataValue(Variant.From(value), valueStatus)
             ]);
 
             AutoIdScanActiveReadResult result = await client.ReadScanActiveAsync(ReaderFor(namespaceIndex))
@@ -179,7 +180,7 @@ namespace Opc.Ua.AutoID.Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.Status, Is.EqualTo((StatusCode)expectedStatus));
+                Assert.That(result.Status, Is.EqualTo(expectedStatus));
                 Assert.That(result.IsActive, Is.False);
             });
         }
