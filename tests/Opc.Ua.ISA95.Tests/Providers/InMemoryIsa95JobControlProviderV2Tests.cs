@@ -373,6 +373,172 @@ namespace Opc.Ua.ISA95.Tests.Providers
         }
 
         [Test]
+        public async Task AcceptedResponseDataAndCurrentStateSurviveTransitionsAndRetrieval()
+        {
+            using var provider = new InMemoryIsa95JobControlProvider();
+            await provider.ReceiveJobOrderAsync(
+                Isa95JobOrderOperationV2.StoreAndStart,
+                Isa95TestData.V2Order("job1")).ConfigureAwait(false);
+            await provider.TransitionAsync(
+                "job1",
+                Isa95JobExecutionTransition.BeginExecution).ConfigureAwait(false);
+
+            ArrayOf<V2.ISA95JobOrderAndStateDataType> runningOrders =
+                await provider.GetJobOrdersV2Async().ConfigureAwait(false);
+            var response = new V2.ISA95JobResponseDataType
+            {
+                EncodingMask = (uint)V2.ISA95JobResponseDataTypeFields.JobResponseData,
+                JobResponseID = "r1",
+                JobOrderID = "job1",
+                JobState = runningOrders[0].State,
+                JobResponseData = [new V2.ISA95ParameterDataType { ID = "observed", Value = Variant.From(17) }]
+            };
+            Isa95JobResponseReceiptV2 receipt = await provider.ReceiveJobResponseAsync(response).ConfigureAwait(false);
+            Assert.That(receipt.ReturnStatus, Is.EqualTo(Isa95JobReturnStatus.Success));
+
+            await provider.TransitionAsync(
+                "job1",
+                Isa95JobExecutionTransition.Complete).ConfigureAwait(false);
+            ArrayOf<V2.ISA95JobOrderAndStateDataType> completedOrders =
+                await provider.GetJobOrdersV2Async().ConfigureAwait(false);
+            ArrayOf<V2.ISA95JobResponseDataType> catalog =
+                await provider.GetJobResponsesV2Async().ConfigureAwait(false);
+            Isa95JobResponseByIdResultV2 byId =
+                await provider.RequestJobResponseByJobOrderIdAsync("job1").ConfigureAwait(false);
+            Isa95JobResponsesByStateResultV2 byState =
+                await provider.RequestJobResponsesByStateAsync(completedOrders[0].State).ConfigureAwait(false);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(catalog, Has.Count.EqualTo(1));
+                Assert.That(catalog[0].JobOrderID, Is.EqualTo("job1"));
+                Assert.That(catalog[0].JobResponseID, Is.EqualTo("r1"));
+                Assert.That(
+                    catalog[0].JobState[0].StateNumber,
+                    Is.EqualTo(completedOrders[0].State[0].StateNumber));
+                Assert.That(
+                    byId.Response!.JobState[0].StateNumber,
+                    Is.EqualTo(completedOrders[0].State[0].StateNumber));
+                Assert.That(byId.Response.JobResponseData[0].Value.TryGetValue(out int observed), Is.True);
+                Assert.That(observed, Is.EqualTo(17));
+                Assert.That(byState.Responses, Has.Count.EqualTo(1));
+                Assert.That(
+                    byState.Responses[0].JobState[0].StateNumber,
+                    Is.EqualTo(completedOrders[0].State[0].StateNumber));
+                Assert.That(
+                    byState.Responses[0].JobResponseData[0].Value.TryGetValue(out int stateObserved),
+                    Is.True);
+                Assert.That(stateObserved, Is.EqualTo(17));
+            });
+
+            await provider.ReceiveJobOrderAsync(
+                Isa95JobOrderOperationV2.Clear,
+                Isa95TestData.V2Order("job1")).ConfigureAwait(false);
+            Assert.That(await provider.GetJobResponsesV2Async().ConfigureAwait(false), Is.Empty);
+        }
+
+        [Test]
+        public async Task ResponseListContainsCurrentEntryForEachStartedOrder()
+        {
+            using var provider = new InMemoryIsa95JobControlProvider();
+            await provider.ReceiveJobOrderAsync(
+                Isa95JobOrderOperationV2.StoreAndStart,
+                Isa95TestData.V2Order("job1")).ConfigureAwait(false);
+            Assert.That(await provider.GetJobResponsesV2Async().ConfigureAwait(false), Is.Empty);
+
+            await provider.TransitionAsync(
+                "job1",
+                Isa95JobExecutionTransition.BeginExecution).ConfigureAwait(false);
+            ArrayOf<V2.ISA95JobResponseDataType> running =
+                await provider.GetJobResponsesV2Async().ConfigureAwait(false);
+
+            Assert.That(running, Has.Count.EqualTo(1));
+            Assert.That(running[0].JobOrderID, Is.EqualTo("job1"));
+            Assert.That(running[0].JobResponseID, Is.Empty);
+            Assert.That(running[0].JobResponseData.Count, Is.Zero);
+            Assert.That(running[0].JobState[0].StateNumber, Is.EqualTo(3u));
+
+            await provider.ReceiveJobResponseAsync(
+                Isa95TestData.V2Response("r1", "job1", stateNumber: 3, stateText: "Running"))
+                .ConfigureAwait(false);
+            await provider.TransitionAsync(
+                "job1",
+                Isa95JobExecutionTransition.Complete).ConfigureAwait(false);
+            ArrayOf<V2.ISA95JobOrderAndStateDataType> completedOrders =
+                await provider.GetJobOrdersV2Async().ConfigureAwait(false);
+            ArrayOf<V2.ISA95JobResponseDataType> completed =
+                await provider.GetJobResponsesV2Async().ConfigureAwait(false);
+
+            Assert.That(completed, Has.Count.EqualTo(1));
+            Assert.That(completed[0].JobResponseID, Is.EqualTo("r1"));
+            Assert.That(
+                completed[0].JobState[0].StateNumber,
+                Is.EqualTo(completedOrders[0].State[0].StateNumber));
+
+            await provider.ReceiveJobOrderAsync(
+                Isa95JobOrderOperationV2.Clear,
+                Isa95TestData.V2Order("job1")).ConfigureAwait(false);
+            Assert.That(await provider.GetJobResponsesV2Async().ConfigureAwait(false), Is.Empty);
+        }
+
+        [Test]
+        public async Task ResponseListChangesTrackStartedOrdersAndRemoval()
+        {
+            using var provider = new InMemoryIsa95JobControlProvider();
+            await provider.ReceiveJobOrderAsync(
+                Isa95JobOrderOperationV2.StoreAndStart,
+                Isa95TestData.V2Order("job1")).ConfigureAwait(false);
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            IAsyncEnumerator<Isa95JobResponseChange> changes = provider
+                .SubscribeResponseChangesAsync(cts.Token)
+                .GetAsyncEnumerator(cts.Token);
+            try
+            {
+                Task<bool> pendingChange = changes.MoveNextAsync().AsTask();
+                await provider.TransitionAsync(
+                    "job1",
+                    Isa95JobExecutionTransition.BeginExecution).ConfigureAwait(false);
+
+                Assert.That(await pendingChange.ConfigureAwait(false), Is.True);
+                Assert.That(changes.Current.JobResponseId, Is.Empty);
+                Assert.That(changes.Current.JobOrderId, Is.EqualTo("job1"));
+                Assert.That(changes.Current.Removed, Is.False);
+
+                pendingChange = changes.MoveNextAsync().AsTask();
+                await provider.ReceiveJobResponseAsync(
+                    Isa95TestData.V2Response("r1", "job1", stateNumber: 3, stateText: "Running"))
+                    .ConfigureAwait(false);
+                Assert.That(await pendingChange.ConfigureAwait(false), Is.True);
+                Assert.That(changes.Current.JobResponseId, Is.EqualTo("r1"));
+                Assert.That(changes.Current.Removed, Is.False);
+
+                pendingChange = changes.MoveNextAsync().AsTask();
+                await provider.TransitionAsync(
+                    "job1",
+                    Isa95JobExecutionTransition.Complete).ConfigureAwait(false);
+                Assert.That(await pendingChange.ConfigureAwait(false), Is.True);
+                Assert.That(changes.Current.JobResponseId, Is.EqualTo("r1"));
+                Assert.That(changes.Current.Removed, Is.False);
+
+                pendingChange = changes.MoveNextAsync().AsTask();
+                await provider.ReceiveJobOrderAsync(
+                    Isa95JobOrderOperationV2.Clear,
+                    Isa95TestData.V2Order("job1")).ConfigureAwait(false);
+                Assert.That(await pendingChange.ConfigureAwait(false), Is.True);
+                Assert.That(changes.Current.JobResponseId, Is.EqualTo("r1"));
+                Assert.That(changes.Current.JobOrderId, Is.EqualTo("job1"));
+                Assert.That(changes.Current.Removed, Is.True);
+                Assert.That(await provider.GetJobResponsesV2Async().ConfigureAwait(false), Is.Empty);
+            }
+            finally
+            {
+                await cts.CancelAsync().ConfigureAwait(false);
+                await changes.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+
+        [Test]
         public async Task PauseNotificationSubstateTargetsInterruptedSubstates()
         {
             using var provider = new InMemoryIsa95JobControlProvider();

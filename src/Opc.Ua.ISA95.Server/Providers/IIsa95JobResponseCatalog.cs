@@ -59,7 +59,7 @@ namespace Opc.Ua.ISA95.Server.Providers
         /// A token used to cancel the operation.
         /// </param>
         /// <returns>
-        /// Every response the provider currently holds.
+        /// One current response for each managed job order that has started execution.
         /// </returns>
         ValueTask<ArrayOf<V2.ISA95JobResponseDataType>> GetJobResponsesV2Async(
             CancellationToken cancellationToken = default);

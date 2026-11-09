@@ -147,8 +147,7 @@ namespace Opc.Ua.ISA95.Server.Providers
                 // refuse to return.
                 PurgeExpired(Now());
 
-                var responses = new List<Isa95JobResponse>(m_responses.Values);
-                SortResponses(responses);
+                List<Isa95JobResponse> responses = GetCurrentJobResponses();
                 var projected = new List<V2.ISA95JobResponseDataType>(responses.Count);
                 foreach (Isa95JobResponse response in responses)
                 {
@@ -804,6 +803,7 @@ namespace Opc.Ua.ISA95.Server.Providers
 
             m_orders.Remove(id);
             SignalCatalog(id, Isa95JobOrderCatalogChangeKind.Removed, null);
+            SignalResponseListChanged(id, Now(), removed: true);
             return EngineResult.Success;
         }
 
@@ -842,6 +842,7 @@ namespace Opc.Ua.ISA95.Server.Providers
             // information; the order is not left behind in a terminal state.
             m_orders.Remove(id);
             SignalCatalog(id, Isa95JobOrderCatalogChangeKind.Removed, null);
+            SignalResponseListChanged(id, Now(), removed: true);
             return EngineResult.Success;
         }
 
@@ -872,6 +873,7 @@ namespace Opc.Ua.ISA95.Server.Providers
             }
 
             entry.State = target;
+            UpdateResponseStates(entry.Order.Id, target);
             if (comment.Count > 0)
             {
                 entry.Order = entry.Order with { Comment = comment };
@@ -1026,13 +1028,147 @@ namespace Opc.Ua.ISA95.Server.Providers
             }
         }
 
+        /// <summary>
+        /// Projects the latest retained response for each order represented in the response list.
+        /// </summary>
+        /// <returns>
+        /// Current responses for managed job orders that are not in a pre-execution state.
+        /// </returns>
+        private List<Isa95JobResponse> GetCurrentJobResponses()
+        {
+            var responses = new List<Isa95JobResponse>();
+            foreach (KeyValuePair<string, JobEntry> order in m_orders)
+            {
+                if (order.Value.State is Isa95JobCanonicalState.NotAllowedToStart
+                    or Isa95JobCanonicalState.AllowedToStart)
+                {
+                    continue;
+                }
+
+                Isa95JobResponse response = FindLatestResponse(order.Key) ??
+                    new Isa95JobResponse
+                    {
+                        Id = string.Empty,
+                        JobOrderId = order.Key,
+                        State = order.Value.State
+                    };
+                responses.Add(response with { State = order.Value.State });
+            }
+            SortResponses(responses);
+            return responses;
+        }
+
+        /// <summary>
+        /// Finds the newest retained response for a job order.
+        /// </summary>
+        /// <param name="jobOrderId">
+        /// The job order identifier.
+        /// </param>
+        /// <returns>
+        /// The newest retained response, or <c>null</c> if none exists.
+        /// </returns>
+        private Isa95JobResponse? FindLatestResponse(string jobOrderId)
+        {
+            Isa95JobResponse? latest = null;
+            foreach (Isa95JobResponse response in m_responses.Values)
+            {
+                if (string.Equals(response.JobOrderId, jobOrderId, StringComparison.Ordinal) &&
+                    (latest is null || CompareResponses(response, latest) > 0))
+                {
+                    latest = response;
+                }
+            }
+            return latest;
+        }
+
+        /// <summary>
+        /// Updates retained response states and signals response-list refreshes.
+        /// </summary>
+        /// <param name="jobOrderId">
+        /// The job order identifier.
+        /// </param>
+        /// <param name="state">
+        /// The current job order state.
+        /// </param>
+        private void UpdateResponseStates(string jobOrderId, Isa95JobCanonicalState state)
+        {
+            List<string>? responseIds = null;
+            foreach (Isa95JobResponse response in m_responses.Values)
+            {
+                if (string.Equals(response.JobOrderId, jobOrderId, StringComparison.Ordinal))
+                {
+                    (responseIds ??= []).Add(response.Id);
+                }
+            }
+
+            DateTimeUtc now = Now();
+            if (responseIds is null)
+            {
+                SignalResponse(string.Empty, jobOrderId, now);
+                return;
+            }
+
+            foreach (string responseId in responseIds)
+            {
+                Isa95JobResponse response = m_responses[responseId];
+                m_responses[responseId] = response with { State = state };
+                SignalResponse(responseId, jobOrderId, now);
+            }
+        }
+
+        /// <summary>
+        /// Signals that a removed order no longer contributes a response-list entry.
+        /// </summary>
+        /// <param name="jobOrderId">
+        /// The removed job order identifier.
+        /// </param>
+        /// <param name="timestamp">
+        /// The time of removal.
+        /// </param>
+        /// <param name="removed">
+        /// Whether the response-list entry was removed.
+        /// </param>
+        private void SignalResponseListChanged(
+            string jobOrderId,
+            DateTimeUtc timestamp,
+            bool removed)
+        {
+            bool signaled = false;
+            foreach (Isa95JobResponse response in m_responses.Values)
+            {
+                if (string.Equals(response.JobOrderId, jobOrderId, StringComparison.Ordinal))
+                {
+                    SignalResponse(response.Id, jobOrderId, timestamp, removed);
+                    signaled = true;
+                }
+            }
+            if (!signaled)
+            {
+                SignalResponse(string.Empty, jobOrderId, timestamp, removed);
+            }
+        }
+
         private static void SortResponses(List<Isa95JobResponse> responses)
         {
-            responses.Sort(static (left, right) =>
-            {
-                int byTime = ((long)left.ReceivedAt).CompareTo((long)right.ReceivedAt);
-                return byTime != 0 ? byTime : string.CompareOrdinal(left.Id, right.Id);
-            });
+            responses.Sort(CompareResponses);
+        }
+
+        /// <summary>
+        /// Compares responses by receipt time and then by identifier.
+        /// </summary>
+        /// <param name="left">
+        /// The first response.
+        /// </param>
+        /// <param name="right">
+        /// The second response.
+        /// </param>
+        /// <returns>
+        /// A value that indicates the relative order of the responses.
+        /// </returns>
+        private static int CompareResponses(Isa95JobResponse left, Isa95JobResponse right)
+        {
+            int byTime = ((long)left.ReceivedAt).CompareTo((long)right.ReceivedAt);
+            return byTime != 0 ? byTime : string.CompareOrdinal(left.Id, right.Id);
         }
 
         private void PurgeExpired(DateTimeUtc now)
@@ -1072,16 +1208,7 @@ namespace Opc.Ua.ISA95.Server.Providers
             ArrayOf<V2.ISA95StateDataType> stateArray =
                 Isa95JobControlConversions.ToV2StateArray(state);
             JobEntry entry = m_orders[id];
-            Isa95JobResponse? latestResponse = null;
-            foreach (Isa95JobResponse response in m_responses.Values)
-            {
-                if (string.Equals(response.JobOrderId, id, StringComparison.Ordinal) &&
-                    (latestResponse is null ||
-                        (long)response.ReceivedAt >= (long)latestResponse.ReceivedAt))
-                {
-                    latestResponse = response;
-                }
-            }
+            Isa95JobResponse? latestResponse = FindLatestResponse(id);
 
             V2.ISA95JobResponseDataType jobResponse = latestResponse is null
                 ? new V2.ISA95JobResponseDataType

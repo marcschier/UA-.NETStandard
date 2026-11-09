@@ -33,9 +33,9 @@ using System.Threading;
 namespace Opc.Ua.ISA95.Server.Providers
 {
     /// <summary>
-    /// Publishes job responses as the provider receives and drops them, so
-    /// that a projection layer can keep the <c>JobOrderResponseList</c> that
-    /// <see cref="IIsa95JobResponseCatalog"/> feeds current.
+    /// Publishes changes that allow a projection layer to keep the
+    /// <c>JobOrderResponseList</c> supplied by
+    /// <see cref="IIsa95JobResponseCatalog"/> current.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -47,16 +47,16 @@ namespace Opc.Ua.ISA95.Server.Providers
     /// state.
     /// </para>
     /// <para>
-    /// Each subscriber receives exactly one change per response received after
-    /// it subscribes, and one per response the provider drops afterwards (for
-    /// example once it outlived its retention); subscribers are independent
-    /// and cancellation or disposal of one does not affect others.
+    /// Each subscriber receives a change for each response received or dropped
+    /// after subscription. Changes also report job state transitions and
+    /// removal of an order from the response list. Subscribers are independent;
+    /// cancellation or disposal of one does not affect others.
     /// </para>
     /// </remarks>
     public interface IIsa95JobResponseChangeSource
     {
         /// <summary>
-        /// Subscribes to received job responses.
+        /// Subscribes to job response and response-list changes.
         /// </summary>
         /// <param name="cancellationToken">
         /// A token that ends the subscription when cancelled.
@@ -69,17 +69,17 @@ namespace Opc.Ua.ISA95.Server.Providers
     }
 
     /// <summary>
-    /// One job response a provider received or dropped.
+    /// A change to a job response or its response-list entry.
     /// </summary>
     public readonly record struct Isa95JobResponseChange
     {
         /// <summary>
-        /// Whether the provider dropped the response, rather than received it.
+        /// Whether the response was dropped or the order's response-list entry was removed.
         /// </summary>
         public bool Removed { get; init; }
 
         /// <summary>
-        /// The identifier of the received job response.
+        /// The response identifier, or an empty string when the order has no retained response.
         /// </summary>
         public required string JobResponseId { get; init; }
 
@@ -95,8 +95,8 @@ namespace Opc.Ua.ISA95.Server.Providers
         public required ulong SequenceNumber { get; init; }
 
         /// <summary>
-        /// The time at which the response was received or dropped, as reported
-        /// by the injected <see cref="System.TimeProvider"/>.
+        /// The time of the change, as reported by the injected
+        /// <see cref="System.TimeProvider"/>.
         /// </summary>
         public required DateTimeUtc Timestamp { get; init; }
     }

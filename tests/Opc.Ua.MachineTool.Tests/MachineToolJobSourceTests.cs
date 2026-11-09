@@ -233,7 +233,7 @@ namespace Opc.Ua.MachineTool.Tests
         }
 
         /// <summary>
-        /// Responses are explicit historical results, not synthetic acknowledgments or execution commands.
+        /// Submitted response payloads are external results; the response list mirrors each started order's state.
         /// </summary>
         [Test]
         public async Task ExplicitResponsesUseEngineQueriesAndCannotRewriteAcceptedStateAsync()
@@ -241,7 +241,9 @@ namespace Opc.Ua.MachineTool.Tests
             await using var source = new MachineToolJobSource(Options());
             await StartExecutingAsync(source).ConfigureAwait(false);
             MachineToolJobSourceCapture running = await source.CaptureAsync().ConfigureAwait(false);
-            Assert.That(running.JobResponses, Is.Empty);
+            Assert.That(running.JobResponses, Has.Count.EqualTo(1));
+            Assert.That(running.JobResponses[0].JobState[0].StateNumber,
+                Is.EqualTo(running.JobOrders[0].State[0].StateNumber));
             var response = new V2.ISA95JobResponseDataType
             {
                 EncodingMask = (uint)(V2.ISA95JobResponseDataTypeFields.Description |

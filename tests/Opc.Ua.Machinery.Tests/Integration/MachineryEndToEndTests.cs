@@ -1117,6 +1117,17 @@ namespace Opc.Ua.Machinery.Tests.Integration
             string jobOrderId,
             CancellationToken ct)
         {
+            Isa95JobOrderReceiptV2 started = await jobProvider.ReceiveJobOrderAsync(
+                Isa95JobOrderOperationV2.Start,
+                new V2.ISA95JobOrderDataType { JobOrderID = jobOrderId },
+                cancellationToken: ct).ConfigureAwait(false);
+            Assert.That(started.ReturnStatus, Is.EqualTo(Isa95JobReturnStatus.Success));
+            Isa95JobOrderReceiptV2 executing = await jobProvider.TransitionAsync(
+                jobOrderId,
+                Isa95JobExecutionTransition.BeginExecution,
+                ct).ConfigureAwait(false);
+            Assert.That(executing.ReturnStatus, Is.EqualTo(Isa95JobReturnStatus.Success));
+
             Isa95JobResponseReceiptV2 receipt = await jobProvider.ReceiveJobResponseAsync(
                 new V2.ISA95JobResponseDataType
                 {
