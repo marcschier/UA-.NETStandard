@@ -584,6 +584,8 @@ namespace Opc.Ua.Pumps.Tests
                 (BaseVariableState)pump.Identification.Child(Opc.Ua.Machinery.BrowseNames.Location)!
             ];
             BaseVariableState field = fields[fieldIndex];
+            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.True);
             switch (handlerPath)
             {
                 case 0:
@@ -605,7 +607,6 @@ namespace Opc.Ua.Pumps.Tests
                     break;
             }
 
-            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
             Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.False);
         }
 
