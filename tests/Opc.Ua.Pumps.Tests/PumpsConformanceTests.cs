@@ -554,6 +554,62 @@ namespace Opc.Ua.Pumps.Tests
         }
 
         /// <summary>
+        /// Profile publication requires each writable identity field to use its persistent AMB handler.
+        /// </summary>
+        [TestCase(0, 0)]
+        [TestCase(1, 0)]
+        [TestCase(2, 0)]
+        [TestCase(0, 1)]
+        [TestCase(1, 1)]
+        [TestCase(2, 1)]
+        [TestCase(0, 2)]
+        [TestCase(1, 2)]
+        [TestCase(2, 2)]
+        public async Task PumpBaseProfileWithdrawsWhenIdentityFieldGetsCompetingWriteHandlerAsync(
+            int fieldIndex,
+            int handlerPath)
+        {
+            SetServerProfiles(PumpBaseServerProfilePrerequisites);
+            IPumpBuilder pump = await CreateAsync("CompetingIdentityHandler");
+            pump.Identification.Set(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri,
+                Variant.From($"urn:example:pump:competing-identity-handler:{fieldIndex}:{handlerPath}"));
+            await m_fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                pump, PersistentStore().Object, WritableIdentityPermissions);
+
+            BaseVariableState[] fields =
+            [
+                (BaseVariableState)pump.Identification.Child(Opc.Ua.Di.BrowseNames.AssetId)!,
+                (BaseVariableState)pump.Identification.Child(Opc.Ua.Di.BrowseNames.ComponentName)!,
+                (BaseVariableState)pump.Identification.Child(Opc.Ua.Machinery.BrowseNames.Location)!
+            ];
+            BaseVariableState field = fields[fieldIndex];
+            switch (handlerPath)
+            {
+                case 0:
+                    field.OnSimpleWriteValue = (_, _, ref _) => ServiceResult.Good;
+                    break;
+                case 1:
+                    field.OnWriteValueAsync = (_, _, _, _, _) =>
+                        new ValueTask<AttributeWriteResult>(new AttributeWriteResult(ServiceResult.Good));
+                    break;
+                case 2:
+                    field.OnWriteValue = (
+                        ISystemContext _,
+                        NodeState _,
+                        NumericRange _,
+                        QualifiedName _,
+                        ref Variant _,
+                        ref StatusCode _,
+                        ref DateTimeUtc _) => ServiceResult.Good;
+                    break;
+            }
+
+            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.False);
+        }
+
+        /// <summary>
         /// Only a forward Organizes reference from Machines to the current pump satisfies the profile.
         /// </summary>
         [Test]

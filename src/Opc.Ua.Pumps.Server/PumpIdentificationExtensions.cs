@@ -248,7 +248,10 @@ namespace Opc.Ua.Pumps.Server
                 if (!ReferenceEquals(
                     identification.FindChild(runtime.SystemContext, field.Variable.BrowseName),
                     field.Variable) ||
-                    field.Variable.OnSimpleWriteValueAsync != field.WriteHandler)
+                    field.Variable.OnSimpleWriteValueAsync != field.WriteHandler ||
+                    field.Variable.OnSimpleWriteValue is not null ||
+                    field.Variable.OnWriteValueAsync is not null ||
+                    field.Variable.OnWriteValue is not null)
                 {
                     return false;
                 }
@@ -300,7 +303,7 @@ namespace Opc.Ua.Pumps.Server
         }
 
         /// <summary>
-        /// Associates a pump identity with the persistent AMB store that owns its retained values.
+        /// Associates a retained identity field with its AMB persistence handler.
         /// </summary>
         private sealed record IdentityFieldBinding(
             BaseVariableState Variable,
