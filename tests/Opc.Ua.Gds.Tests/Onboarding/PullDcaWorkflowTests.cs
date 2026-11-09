@@ -36,6 +36,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
 using Opc.Ua.Client;
+using Opc.Ua.Client.Tests.SessionContexts;
 using Opc.Ua.Gds.Client;
 using Opc.Ua.Onboarding;
 using Opc.Ua.Tests;
@@ -263,6 +264,32 @@ namespace Opc.Ua.Gds.Tests.Onboarding
 
             Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSecurityChecksFailed));
             Assert.That(fixture.Host.KeyPairInstalledIds, Is.Empty);
+        }
+
+        [TestCase("trust:dca", PullDcaStage.ReadingTrustList)]
+        [TestCase("install-keypair:dca", PullDcaStage.InstallingCredentials)]
+        public async Task NewKeyPairFailureAfterFinishReportsInterruptedStage(
+            string operation,
+            PullDcaStage expectedStage)
+        {
+            var fixture = new Fixture { FailingOperation = operation };
+            var progress = new ProgressRecorder();
+            PullDcaRequest request = CreateRequest() with
+            {
+                DcaCertificateRequestMode = PullDcaCertificateRequestMode.NewKeyPairRequest
+            };
+
+            InvalidOperationException? failure = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await fixture.Create().RunAsync(kRegistrar, request, progress).ConfigureAwait(false));
+
+            Assert.That(failure!.Message, Is.EqualTo("host failure"));
+            Assert.That(fixture.Calls[^1], Is.EqualTo(operation));
+            Assert.That(fixture.Connection.NewKeyPairRequests, Is.EqualTo(1));
+            Assert.That(fixture.Connection.FinishedRequestIds, Is.EqualTo(new[] { kRequestId }));
+            Assert.That(progress.Items[^1].Stage, Is.EqualTo(expectedStage));
+            Assert.That(progress.Items[^1].ApplicationId, Is.EqualTo(kDcaId));
+            Assert.That(progress.Items[^1].RequestId, Is.EqualTo(kRequestId));
+            Assert.That(progress.Items.Any(p => p.Stage == PullDcaStage.Completed), Is.False);
         }
 
         [Test]
@@ -1940,6 +1967,51 @@ namespace Opc.Ua.Gds.Tests.Onboarding
     [Category("Onboarding")]
     public sealed class PullDcaConnectionTests
     {
+        [Test]
+        public async Task KeyPairFinishDoesNotFollowRecreatedSession()
+        {
+            await using var fixture = new SessionRequestContextTestContext(
+                securityMode: MessageSecurityMode.SignAndEncrypt);
+            fixture.MessageContext.NamespaceUris.GetIndexOrAppend(Opc.Ua.Gds.Namespaces.OpcUaGds);
+            var applicationId = new NodeId("app", 0);
+            var requestId = new NodeId("request", 0);
+            var registrar = new PullDcaRegistrar(
+                new Uri("opc.tcp://localhost:4840"), new NodeId("registrar", 0), new NodeId("directory", 0));
+            fixture.Handler = (request, _) =>
+            {
+                if (request is BrowseRequest)
+                {
+                    return new ValueTask<IServiceResponse>(
+                        new BrowseResponse { Results = [new BrowseResult { References = [] }] });
+                }
+                if (request is CallRequest call)
+                {
+                    ArrayOf<Variant> output = call.MethodsToCall[0].MethodId ==
+                        Resolve(Opc.Ua.Gds.MethodIds.CertificateDirectoryType_StartNewKeyPairRequest,
+                            (ServiceMessageContext)fixture.MessageContext)
+                        ? [Variant.From(requestId)]
+                        : [Variant.From(ByteString.From(new byte[] { 1 })),
+                            Variant.From(ByteString.From(new byte[] { 2 })), Variant.From(ArrayOf<ByteString>.Empty)];
+                    return new ValueTask<IServiceResponse>(
+                        new CallResponse { Results = [new CallMethodResult { OutputArguments = output }] });
+                }
+                throw new InvalidOperationException("Unexpected key-pair request.");
+            };
+            var adapter = new PullDcaConnection(fixture.ManagedSession, registrar, fixture.Telemetry, 1024);
+            NodeId started = await adapter.StartNewKeyPairAsync(
+                applicationId, kProfile, CancellationToken.None).ConfigureAwait(false);
+            Assert.That(started, Is.EqualTo(requestId));
+            int callsBeforeRecreate = fixture.Requests.Count;
+            fixture.Recreate();
+
+            ServiceResultException? error = await Assert.ThrowsAsync<ServiceResultException>(async () =>
+                await adapter.FinishNewKeyPairAsync(applicationId, requestId, CancellationToken.None)
+                    .ConfigureAwait(false));
+
+            Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSessionIdInvalid));
+            Assert.That(fixture.Requests, Has.Count.EqualTo(callsBeforeRecreate));
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public async Task NewKeyPairRequestsRequireConfidentialDispatch(bool finish)

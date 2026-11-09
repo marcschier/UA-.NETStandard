@@ -965,6 +965,22 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                 return new ValueTask<NodeId>(m_fixture.m_binding.RequestId);
             }
 
+            /// <inheritdoc/>
+            public ValueTask<NodeId> StartNewKeyPairAsync(
+                NodeId applicationId, PullDcaCertificateProfile profile, CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                throw new AssertionException("A new key pair was not requested by this signing recovery fixture.");
+            }
+
+            /// <inheritdoc/>
+            public ValueTask<(ByteString Certificate, ByteString PrivateKeyPfx, ArrayOf<ByteString> Issuers)>
+                FinishNewKeyPairAsync(NodeId applicationId, NodeId requestId, CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                throw new AssertionException("A new key pair was not requested by this signing recovery fixture.");
+            }
+
             public ValueTask<(ByteString Certificate, ArrayOf<ByteString> Issuers)> FinishAsync(
                 NodeId applicationId, NodeId requestId, CancellationToken ct)
             {
