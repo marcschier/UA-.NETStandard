@@ -85,6 +85,63 @@ namespace Opc.Ua.Gds.Tests.Onboarding
         }
 
         /// <summary>
+        /// Durable startup refuses to retry persisted work unless the processor can reconcile interrupted effects.
+        /// </summary>
+        [Test]
+        public async Task DurableStartupRequiresRecoveryProcessor()
+        {
+            using var workStore = new Mock<IDeviceRegistrarPushWorkStore>().Object;
+            using var scheduler = new DeviceRegistrarPushScheduler(
+                new Processor(), NUnitTelemetryContext.Create(), capacity: 32, workStore: workStore);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await scheduler.StartAsync(CancellationToken.None).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// A crashed attempt still occupies pending capacity when another restored item runs first.
+        /// </summary>
+        [Test]
+        public async Task RestartCountsPreviouslyProcessingWorkAgainstPendingCapacity()
+        {
+            using var fileSystem = new VirtualFileSystem();
+            var telemetry = NUnitTelemetryContext.Create();
+            const string path = "push-restart-capacity.bin";
+            Guid pendingId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+            Guid interruptedId = Guid.Parse("00000000-0000-0000-0000-000000000002");
+            using (var original = new FileSystemDeviceRegistrarPushWorkStore(path, telemetry, fileSystem))
+            {
+                await original.EnqueueAsync(interruptedId, Application("interrupted"), 1).ConfigureAwait(false);
+                await original.BeginAttemptAsync(interruptedId).ConfigureAwait(false);
+                await original.EnqueueAsync(pendingId, Application("pending"), 1).ConfigureAwait(false);
+            }
+
+            var entered = Signal();
+            var release = Signal();
+            var processor = new ScriptedRecoveryProcessor(
+                blockedProcessingUri: "urn:pending", processingEntered: entered, processingRelease: release);
+            using var store = new FileSystemDeviceRegistrarPushWorkStore(path, telemetry, fileSystem);
+            using var scheduler = new DeviceRegistrarPushScheduler(processor, telemetry, 1, store);
+            await scheduler.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                await entered.Task.WaitAsync(k_deadline).ConfigureAwait(false);
+                ArrayOf<DeviceRegistrarPushWorkItem> items = await store.ReadAsync().ConfigureAwait(false);
+                Assert.That(items.ToList().Single(item => item.Id == interruptedId).State,
+                    Is.EqualTo(DeviceRegistrarPushWorkState.Interrupted));
+                ServiceResultException? full = await Assert.ThrowsAsync<ServiceResultException>(async () =>
+                    await scheduler.EnqueueAsync(Application("third")).ConfigureAwait(false));
+                Assert.That(full!.StatusCode, Is.EqualTo(StatusCodes.BadTooManyOperations));
+                Assert.That(processor.ProcessedApplicationUris, Is.EqualTo(new[] { "urn:pending" }));
+            }
+            finally
+            {
+                await scheduler.StopAsync(CancellationToken.None).WaitAsync(k_deadline).ConfigureAwait(false);
+                release.TrySetResult(true);
+            }
+        }
+
+        /// <summary>
         /// A stopped or not-yet-started queue cannot return successful acceptance.
         /// </summary>
         [Test]
@@ -445,6 +502,581 @@ namespace Opc.Ua.Gds.Tests.Onboarding
         }
 
         /// <summary>
+        /// Durable acceptance survives shutdown and fresh store/scheduler instances reconcile only interrupted work.
+        /// </summary>
+        [Test]
+        public async Task DurableStoreRestartsAndRecoversInterruptedAndPendingWork()
+        {
+            string checkpointDirectory = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(),
+                "Opc.Ua.Gds.Tests",
+                Guid.NewGuid().ToString("N"));
+            System.IO.Directory.CreateDirectory(checkpointDirectory);
+            string checkpointPath = System.IO.Path.Combine(checkpointDirectory, "push-work.bin");
+
+            var firstEntered = Signal();
+            var firstRelease = Signal();
+            var reconciliationEntered = Signal();
+            var reconciliationRelease = Signal();
+            using var logs = new WorkerLogs();
+            var telemetry = new Mock<ITelemetryContext>(MockBehavior.Strict);
+            telemetry.SetupGet(value => value.LoggerFactory).Returns(logs);
+
+            FileSystemDeviceRegistrarPushWorkStore? store1 = null;
+            FileSystemDeviceRegistrarPushWorkStore? store2 = null;
+            FileSystemDeviceRegistrarPushWorkStore? store3 = null;
+            DeviceRegistrarPushScheduler? scheduler1 = null;
+            DeviceRegistrarPushScheduler? scheduler2 = null;
+            var processor1 = new ScriptedRecoveryProcessor(
+                blockedProcessingUri: "urn:first",
+                processingEntered: firstEntered,
+                processingRelease: firstRelease);
+            var processor2 = new ScriptedRecoveryProcessor(
+                blockedReconciliationUri: "urn:first",
+                reconciliationEntered: reconciliationEntered,
+                reconciliationRelease: reconciliationRelease);
+            bool scheduler1Started = false;
+            bool scheduler1Stopped = false;
+            bool scheduler2Started = false;
+            bool scheduler2Stopped = false;
+
+            try
+            {
+                store1 = new FileSystemDeviceRegistrarPushWorkStore(checkpointPath, telemetry.Object);
+                scheduler1 = new DeviceRegistrarPushScheduler(
+                    processor1, telemetry.Object, capacity: 1, workStore: store1);
+                await scheduler1.StartAsync(CancellationToken.None).ConfigureAwait(false);
+                scheduler1Started = true;
+
+                await scheduler1.EnqueueAsync(Application("first")).ConfigureAwait(false);
+                await firstEntered.Task.WaitAsync(k_deadline).ConfigureAwait(false);
+                await scheduler1.EnqueueAsync(Application("second")).ConfigureAwait(false);
+                ServiceResultException? full = await Assert.ThrowsAsync<ServiceResultException>(async () =>
+                    await scheduler1.EnqueueAsync(Application("third")).ConfigureAwait(false));
+                Assert.That(full!.StatusCode, Is.EqualTo(StatusCodes.BadTooManyOperations));
+
+                DeviceRegistrarPushWorkItem[] accepted = (await store1.ReadAsync()
+                    .ConfigureAwait(false)).Span.ToArray();
+                Assert.That(accepted, Has.Length.EqualTo(2));
+                DeviceRegistrarPushWorkItem firstAccepted =
+                    accepted.Single(item => item.Application.ApplicationUri == "urn:first");
+                DeviceRegistrarPushWorkItem secondAccepted =
+                    accepted.Single(item => item.Application.ApplicationUri == "urn:second");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(firstAccepted.Id, Is.Not.EqualTo(Guid.Empty));
+                    Assert.That(secondAccepted.Id, Is.Not.EqualTo(Guid.Empty));
+                    Assert.That(firstAccepted.Id, Is.Not.EqualTo(secondAccepted.Id));
+                    Assert.That(firstAccepted.State, Is.EqualTo(DeviceRegistrarPushWorkState.Processing));
+                    Assert.That(secondAccepted.State, Is.EqualTo(DeviceRegistrarPushWorkState.Pending));
+                    AssertApplicationDescription(firstAccepted.Application, "urn:first", "opc.tcp://first:4840");
+                    AssertApplicationDescription(secondAccepted.Application, "urn:second", "opc.tcp://second:4840");
+                });
+
+                Guid firstId = firstAccepted.Id;
+                Guid secondId = secondAccepted.Id;
+                await scheduler1.StopAsync(CancellationToken.None).WaitAsync(k_deadline).ConfigureAwait(false);
+                scheduler1Stopped = true;
+
+                DeviceRegistrarPushWorkItem[] interrupted = (await store1.ReadAsync()
+                    .ConfigureAwait(false)).Span.ToArray();
+                DeviceRegistrarPushWorkItem firstInterrupted =
+                    interrupted.Single(item => item.Application.ApplicationUri == "urn:first");
+                DeviceRegistrarPushWorkItem secondPending =
+                    interrupted.Single(item => item.Application.ApplicationUri == "urn:second");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(processor1.ProcessingCancellationObserved, Is.True);
+                    Assert.That(processor1.ProcessedApplicationUris, Is.EqualTo(new[] { "urn:first" }));
+                    Assert.That(interrupted, Has.Length.EqualTo(2));
+                    Assert.That(firstInterrupted.Id, Is.EqualTo(firstId));
+                    Assert.That(secondPending.Id, Is.EqualTo(secondId));
+                    Assert.That(firstInterrupted.State, Is.EqualTo(DeviceRegistrarPushWorkState.Interrupted));
+                    Assert.That(secondPending.State, Is.EqualTo(DeviceRegistrarPushWorkState.Pending));
+                    AssertApplicationDescription(firstInterrupted.Application, "urn:first", "opc.tcp://first:4840");
+                    AssertApplicationDescription(secondPending.Application, "urn:second", "opc.tcp://second:4840");
+                });
+
+                scheduler1.Dispose();
+                scheduler1 = null;
+                store1.Dispose();
+                store1 = null;
+
+                store2 = new FileSystemDeviceRegistrarPushWorkStore(checkpointPath, telemetry.Object);
+                DeviceRegistrarPushWorkItem[] restoredBeforeStart = (await store2.ReadAsync()
+                    .ConfigureAwait(false)).Span.ToArray();
+                DeviceRegistrarPushWorkItem restoredFirst =
+                    restoredBeforeStart.Single(item => item.Application.ApplicationUri == "urn:first");
+                DeviceRegistrarPushWorkItem restoredSecond =
+                    restoredBeforeStart.Single(item => item.Application.ApplicationUri == "urn:second");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(restoredBeforeStart, Has.Length.EqualTo(2));
+                    Assert.That(restoredFirst.Id, Is.EqualTo(firstId));
+                    Assert.That(restoredSecond.Id, Is.EqualTo(secondId));
+                    Assert.That(restoredFirst.State, Is.EqualTo(DeviceRegistrarPushWorkState.Interrupted));
+                    Assert.That(restoredSecond.State, Is.EqualTo(DeviceRegistrarPushWorkState.Pending));
+                    AssertApplicationDescription(restoredFirst.Application, "urn:first", "opc.tcp://first:4840");
+                    AssertApplicationDescription(restoredSecond.Application, "urn:second", "opc.tcp://second:4840");
+                });
+
+                scheduler2 = new DeviceRegistrarPushScheduler(
+                    processor2, telemetry.Object, capacity: 1, workStore: store2);
+                await scheduler2.StartAsync(CancellationToken.None).ConfigureAwait(false);
+                scheduler2Started = true;
+                await reconciliationEntered.Task.WaitAsync(k_deadline).ConfigureAwait(false);
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(processor2.ProcessedApplicationUris, Does.Not.Contain("urn:first"));
+                    Assert.That(processor2.ReconciledApplicationUris, Is.EqualTo(new[] { "urn:first" }));
+                    Assert.That(processor2.EventsFor("urn:first"),
+                        Is.EqualTo(new[] { ("reconcile-enter", "urn:first") }));
+                });
+
+                reconciliationRelease.TrySetResult(true);
+                await logs.WaitForCompletionCountAsync(2).ConfigureAwait(false);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(processor2.ProcessedApplicationUris.Count(uri => uri == "urn:first"), Is.EqualTo(1));
+                    Assert.That(processor2.ProcessedApplicationUris.Count(uri => uri == "urn:second"), Is.EqualTo(1));
+                    Assert.That(processor2.ReconciledApplicationUris, Is.EqualTo(new[] { "urn:first" }));
+                    Assert.That(processor2.EventsFor("urn:first"),
+                        Is.EqualTo(new[] {
+                            ("reconcile-enter", "urn:first"),
+                            ("reconcile-complete", "urn:first"),
+                            ("process", "urn:first")
+                        }));
+                    Assert.That(processor2.EventsFor("urn:second"),
+                        Is.EqualTo(new[] { ("process", "urn:second") }));
+                    Assert.That(logs.Events.Count(entry => entry.Event.Id == 100), Is.EqualTo(2));
+                });
+
+                await scheduler2.StopAsync(CancellationToken.None).WaitAsync(k_deadline).ConfigureAwait(false);
+                scheduler2Stopped = true;
+                scheduler2.Dispose();
+                scheduler2 = null;
+                store2.Dispose();
+                store2 = null;
+
+                store3 = new FileSystemDeviceRegistrarPushWorkStore(checkpointPath, telemetry.Object);
+                Assert.That((await store3.ReadAsync().ConfigureAwait(false)).Count, Is.Zero);
+            }
+            finally
+            {
+                firstRelease.TrySetResult(true);
+                reconciliationRelease.TrySetResult(true);
+
+                if (scheduler1 is not null)
+                {
+                    try
+                    {
+                        if (scheduler1Started && !scheduler1Stopped)
+                        {
+                            await scheduler1.StopAsync(CancellationToken.None)
+                                .WaitAsync(k_deadline).ConfigureAwait(false);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Preserve the original test failure while still releasing owned resources.
+                    }
+                    scheduler1.Dispose();
+                }
+                if (scheduler2 is not null)
+                {
+                    try
+                    {
+                        if (scheduler2Started && !scheduler2Stopped)
+                        {
+                            await scheduler2.StopAsync(CancellationToken.None)
+                                .WaitAsync(k_deadline).ConfigureAwait(false);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Preserve the original test failure while still releasing owned resources.
+                    }
+                    scheduler2.Dispose();
+                }
+                store1?.Dispose();
+                store2?.Dispose();
+                store3?.Dispose();
+                if (System.IO.Directory.Exists(checkpointDirectory))
+                {
+                    System.IO.Directory.Delete(checkpointDirectory, recursive: true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Queue acceptance detaches caller-owned LocalizedText arrays and deferred formatting arguments.
+        /// </summary>
+        [Test]
+        public async Task EnqueueAsyncDetachesLocalizedNamesFromCallerMutation()
+        {
+            var firstEntered = Signal();
+            var releaseFirst = Signal();
+            var targetProcessed = Signal();
+            var received = new ConcurrentQueue<ApplicationDescription>();
+            int processCount = 0;
+            var processor = new Processor
+            {
+                Handler = async (application, cancellationToken) =>
+                {
+                    received.Enqueue(application);
+                    if (Interlocked.Increment(ref processCount) == 1)
+                    {
+                        firstEntered.TrySetResult(true);
+                        await releaseFirst.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        targetProcessed.TrySetResult(true);
+                    }
+                }
+            };
+            using var scheduler = new DeviceRegistrarPushScheduler(processor, NUnitTelemetryContext.Create());
+            await scheduler.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                await scheduler.EnqueueAsync(Application("blocker")).ConfigureAwait(false);
+                await firstEntered.Task.WaitAsync(k_deadline).ConfigureAwait(false);
+
+                object[] formattingArguments = ["Original"];
+                var originalName = new LocalizedText(
+                    new TranslationInfo("device-name", "en-US", "Device {0}", formattingArguments));
+                LocalizedText[] originalNames = [originalName];
+                ApplicationDescription queued = Application("localized");
+                queued.ApplicationNames = originalNames.ToArrayOf();
+
+                await scheduler.EnqueueAsync(queued).ConfigureAwait(false);
+                formattingArguments[0] = "Changed";
+                originalNames[0] = new LocalizedText("fr-FR", "Caller replacement");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(queued.ApplicationNames[0].Text, Is.EqualTo("Caller replacement"));
+                    Assert.That(originalName.Text, Is.EqualTo("Device Changed"));
+                });
+
+                releaseFirst.TrySetResult(true);
+                await targetProcessed.Task.WaitAsync(k_deadline).ConfigureAwait(false);
+                ApplicationDescription processed = received.Single(
+                    application => application.ApplicationUri == "urn:localized");
+                LocalizedText processedName = processed.ApplicationNames[0];
+                Assert.Multiple(() =>
+                {
+                    Assert.That(received, Has.Count.EqualTo(2));
+                    Assert.That(processed.ApplicationUri, Is.EqualTo("urn:localized"));
+                    Assert.That(processed.ApplicationNames.Count, Is.EqualTo(1));
+                    Assert.That(processedName.Locale, Is.EqualTo("en-US"));
+                    Assert.That(processedName.Text, Is.EqualTo("Device Original"));
+                    Assert.That(processedName.TranslationInfo.Args, Is.EqualTo(new object[] { "Original" }));
+                });
+            }
+            finally
+            {
+                releaseFirst.TrySetResult(true);
+                await scheduler.StopAsync(CancellationToken.None).WaitAsync(k_deadline).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Queued descriptions retain the post-setter application-name value.
+        /// </summary>
+        [TestCase("null-array")]
+        [TestCase("empty-array")]
+        [TestCase("null-element")]
+        public async Task EnqueueAsyncPreservesApplicationNamesAfterSetterNormalization(string scenario)
+        {
+            var entered = Signal();
+            var release = Signal();
+            var received = new TaskCompletionSource<ApplicationDescription>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            var processor = new Processor
+            {
+                Handler = async (application, cancellationToken) =>
+                {
+                    if (application.ApplicationUri == "urn:blocker")
+                    {
+                        entered.TrySetResult(true);
+                        await release.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        received.TrySetResult(application);
+                    }
+                }
+            };
+            using var scheduler = new DeviceRegistrarPushScheduler(processor, NUnitTelemetryContext.Create(), 1);
+            await scheduler.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                await scheduler.EnqueueAsync(Application("blocker")).ConfigureAwait(false);
+                await entered.Task.WaitAsync(k_deadline).ConfigureAwait(false);
+                ApplicationDescription queued = Application("names");
+                queued.ApplicationNames = NamesForSnapshotScenario(scenario);
+                ArrayOf<LocalizedText> expectedNames = queued.ApplicationNames;
+                AssertApplicationNamesState(queued.ApplicationNames, expectedNames);
+                await scheduler.EnqueueAsync(queued).ConfigureAwait(false);
+
+                // The caller can replace the field after acceptance without changing the queued snapshot.
+                queued.ApplicationNames = [new LocalizedText("en-US", "Caller replacement")];
+                release.TrySetResult(true);
+                ApplicationDescription processed = await received.Task
+                    .WaitAsync(k_deadline).ConfigureAwait(false);
+                Assert.That(processed.ApplicationUri, Is.EqualTo("urn:names"));
+                AssertApplicationNamesState(processed.ApplicationNames, expectedNames);
+                Assert.That(queued.ApplicationNames[0].Text, Is.EqualTo("Caller replacement"));
+            }
+            finally
+            {
+                release.TrySetResult(true);
+                await scheduler.StopAsync(CancellationToken.None).WaitAsync(k_deadline).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// The real store snapshots the post-setter application-name value.
+        /// </summary>
+        [TestCase("null-array")]
+        [TestCase("empty-array")]
+        [TestCase("null-element")]
+        public async Task DurableStorePreservesApplicationNamesAfterSetterNormalization(string scenario)
+        {
+            string directory = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(), "Opc.Ua.Gds.Tests", Guid.NewGuid().ToString("N"));
+            string path = System.IO.Path.Combine(directory, "push-work.bin");
+            var telemetry = NUnitTelemetryContext.Create();
+            Guid id = Guid.NewGuid();
+            try
+            {
+                System.IO.Directory.CreateDirectory(directory);
+                using (var store = new FileSystemDeviceRegistrarPushWorkStore(path, telemetry))
+                {
+                    ApplicationDescription application = Application("names");
+                    application.ApplicationNames = NamesForSnapshotScenario(scenario);
+                    ArrayOf<LocalizedText> expectedNames = application.ApplicationNames;
+                    AssertApplicationNamesState(application.ApplicationNames, expectedNames);
+                    await store.EnqueueAsync(id, application, 1).ConfigureAwait(false);
+                    application.ApplicationNames = [new LocalizedText("en-US", "Caller replacement")];
+
+                    ArrayOf<DeviceRegistrarPushWorkItem> items = await store.ReadAsync().ConfigureAwait(false);
+                    Assert.That(items.Count, Is.EqualTo(1));
+                    Assert.That(items[0].Id, Is.EqualTo(id));
+                    Assert.That(items[0].State, Is.EqualTo(DeviceRegistrarPushWorkState.Pending));
+                    Assert.That(items[0].Application.ApplicationUri, Is.EqualTo("urn:names"));
+                    AssertApplicationNamesState(items[0].Application.ApplicationNames, expectedNames);
+
+                    // Also detach returned descriptions from the durable record.
+                    items[0].Application.ApplicationNames = [new LocalizedText("Returned replacement")];
+                }
+
+                using (var reopened = new FileSystemDeviceRegistrarPushWorkStore(path, telemetry))
+                {
+                    ArrayOf<DeviceRegistrarPushWorkItem> items = await reopened.ReadAsync().ConfigureAwait(false);
+                    Assert.That(items.Count, Is.EqualTo(1));
+                    Assert.That(items[0].Id, Is.EqualTo(id));
+                    Assert.That(items[0].Application.ApplicationUri, Is.EqualTo("urn:names"));
+                    AssertApplicationNamesState(items[0].Application.ApplicationNames, expectedNames);
+                    await reopened.CompleteAsync(id).ConfigureAwait(false);
+                    Assert.That((await reopened.ReadAsync().ConfigureAwait(false)).Count, Is.Zero);
+                }
+            }
+            finally
+            {
+                if (System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.Delete(directory, recursive: true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Queue snapshots do not invoke a provider-owned description's virtual clone or retain its fields.
+        /// </summary>
+        [Test]
+        public async Task EnqueueAsyncDetachesSelfCloningApplicationDescription()
+        {
+            var firstEntered = Signal();
+            var releaseFirst = Signal();
+            var targetProcessed = Signal();
+            var received = new ConcurrentQueue<ApplicationDescription>();
+            int processCount = 0;
+            var processor = new Processor
+            {
+                Handler = async (application, cancellationToken) =>
+                {
+                    received.Enqueue(application);
+                    if (Interlocked.Increment(ref processCount) == 1)
+                    {
+                        firstEntered.TrySetResult(true);
+                        await releaseFirst.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        targetProcessed.TrySetResult(true);
+                    }
+                }
+            };
+            using var scheduler = new DeviceRegistrarPushScheduler(processor, NUnitTelemetryContext.Create());
+            await scheduler.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                await scheduler.EnqueueAsync(Application("blocker")).ConfigureAwait(false);
+                await firstEntered.Task.WaitAsync(k_deadline).ConfigureAwait(false);
+
+                string[] discoveryUrls = ["opc.tcp://original:4840"];
+                LocalizedText[] applicationNames = [new LocalizedText("en-US", "Original name")];
+                var original = new SelfCloningApplicationDescription
+                {
+                    ApplicationName = new LocalizedText("en-US", "Original application"),
+                    ApplicationUri = "urn:original",
+                    ApplicationType = ApplicationType.Server,
+                    ProductUri = "urn:product:original",
+                    GatewayServerUri = "urn:gateway:original",
+                    DiscoveryProfileUri = "urn:profile:original",
+                    DiscoveryUrls = discoveryUrls.ToArrayOf(),
+                    ApplicationNames = applicationNames.ToArrayOf()
+                };
+
+                await scheduler.EnqueueAsync(original).ConfigureAwait(false);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(original.GetType(), Is.EqualTo(typeof(SelfCloningApplicationDescription)));
+                    Assert.That(original.ApplicationUri, Is.EqualTo("urn:original"));
+                    Assert.That(original.ProductUri, Is.EqualTo("urn:product:original"));
+                    Assert.That(discoveryUrls, Is.EqualTo(new[] { "opc.tcp://original:4840" }));
+                    Assert.That(applicationNames[0].Text, Is.EqualTo("Original name"));
+                });
+
+                original.ApplicationName = new LocalizedText("fr-FR", "Changed");
+                original.ApplicationUri = "urn:changed";
+                original.ApplicationType = ApplicationType.Client;
+                original.ProductUri = "urn:product:changed";
+                original.GatewayServerUri = "urn:gateway:changed";
+                original.DiscoveryProfileUri = "urn:profile:changed";
+                discoveryUrls[0] = "opc.tcp://changed:4840";
+                applicationNames[0] = new LocalizedText("fr-FR", "Changed name");
+
+                releaseFirst.TrySetResult(true);
+                await targetProcessed.Task.WaitAsync(k_deadline).ConfigureAwait(false);
+                ApplicationDescription processed = received.Single(
+                    application => application.ApplicationUri == "urn:original");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(processed.GetType(), Is.EqualTo(typeof(ApplicationDescription)));
+                    Assert.That(processed.ApplicationName.Locale, Is.EqualTo("en-US"));
+                    Assert.That(processed.ApplicationName.Text, Is.EqualTo("Original application"));
+                    Assert.That(processed.ApplicationUri, Is.EqualTo("urn:original"));
+                    Assert.That(processed.ApplicationType, Is.EqualTo(ApplicationType.Server));
+                    Assert.That(processed.ProductUri, Is.EqualTo("urn:product:original"));
+                    Assert.That(processed.GatewayServerUri, Is.EqualTo("urn:gateway:original"));
+                    Assert.That(processed.DiscoveryProfileUri, Is.EqualTo("urn:profile:original"));
+                    Assert.That(
+                        processed.DiscoveryUrls.Span.ToArray(),
+                        Is.EqualTo(new[] { "opc.tcp://original:4840" }));
+                    Assert.That(processed.ApplicationNames[0].Text, Is.EqualTo("Original name"));
+                });
+            }
+            finally
+            {
+                releaseFirst.TrySetResult(true);
+                await scheduler.StopAsync(CancellationToken.None).WaitAsync(k_deadline).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Durable acceptance snapshots provider-owned descriptions before persisting their fields and arrays.
+        /// </summary>
+        [Test]
+        public async Task DurableStoreDetachesSelfCloningApplicationDescription()
+        {
+            string directory = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(), "Opc.Ua.Gds.Tests", Guid.NewGuid().ToString("N"));
+            string path = System.IO.Path.Combine(directory, "push-work.bin");
+            Guid id = Guid.NewGuid();
+            try
+            {
+                System.IO.Directory.CreateDirectory(directory);
+                using var store = new FileSystemDeviceRegistrarPushWorkStore(path, NUnitTelemetryContext.Create());
+                string[] discoveryUrls = ["opc.tcp://original:4840"];
+                LocalizedText[] applicationNames = [new LocalizedText("en-US", "Original name")];
+                var original = new SelfCloningApplicationDescription
+                {
+                    ApplicationName = new LocalizedText("en-US", "Original application"),
+                    ApplicationUri = "urn:original",
+                    ApplicationType = ApplicationType.Server,
+                    ProductUri = "urn:product:original",
+                    GatewayServerUri = "urn:gateway:original",
+                    DiscoveryProfileUri = "urn:profile:original",
+                    DiscoveryUrls = discoveryUrls.ToArrayOf(),
+                    ApplicationNames = applicationNames.ToArrayOf()
+                };
+
+                await store.EnqueueAsync(id, original, 1).ConfigureAwait(false);
+                Assert.That(original.ApplicationUri, Is.EqualTo("urn:original"));
+                original.ApplicationUri = "urn:changed";
+                discoveryUrls[0] = "opc.tcp://changed:4840";
+                applicationNames[0] = new LocalizedText("fr-FR", "Changed name");
+
+                ArrayOf<DeviceRegistrarPushWorkItem> items = await store.ReadAsync().ConfigureAwait(false);
+                Assert.That(items.Count, Is.EqualTo(1));
+                ApplicationDescription persisted = items[0].Application;
+                Assert.Multiple(() =>
+                {
+                    Assert.That(persisted.GetType(), Is.EqualTo(typeof(ApplicationDescription)));
+                    Assert.That(persisted.ApplicationUri, Is.EqualTo("urn:original"));
+                    Assert.That(persisted.ApplicationType, Is.EqualTo(ApplicationType.Server));
+                    Assert.That(persisted.ApplicationName.Text, Is.EqualTo("Original application"));
+                    Assert.That(persisted.ProductUri, Is.EqualTo("urn:product:original"));
+                    Assert.That(persisted.GatewayServerUri, Is.EqualTo("urn:gateway:original"));
+                    Assert.That(persisted.DiscoveryProfileUri, Is.EqualTo("urn:profile:original"));
+                    Assert.That(
+                        persisted.DiscoveryUrls.Span.ToArray(),
+                        Is.EqualTo(new[] { "opc.tcp://original:4840" }));
+                    Assert.That(persisted.ApplicationNames[0].Text, Is.EqualTo("Original name"));
+                });
+            }
+            finally
+            {
+                if (System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.Delete(directory, recursive: true);
+                }
+            }
+        }
+
+        private static ArrayOf<LocalizedText> NamesForSnapshotScenario(string scenario)
+        {
+            return scenario switch
+            {
+                "null-array" => ArrayOf.Null<LocalizedText>(),
+                "empty-array" => ArrayOf.Empty<LocalizedText>(),
+                "null-element" => new LocalizedText[] { default }.ToArrayOf(),
+                _ => throw new ArgumentOutOfRangeException(nameof(scenario))
+            };
+        }
+
+        private static void AssertApplicationNamesState(
+            ArrayOf<LocalizedText> names,
+            ArrayOf<LocalizedText> expectedNames)
+        {
+            Assert.That(names.IsNull, Is.EqualTo(expectedNames.IsNull));
+            Assert.That(names.Count, Is.EqualTo(expectedNames.Count));
+            if (expectedNames.Count > 0)
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(names[0], Is.EqualTo(expectedNames[0]));
+                    Assert.That(names[0].IsNull, Is.EqualTo(expectedNames[0].IsNull));
+                    Assert.That(names[0].Text, Is.EqualTo(expectedNames[0].Text));
+                    Assert.That(names[0].Locale, Is.EqualTo(expectedNames[0].Locale));
+                });
+            }
+        }
+
+        /// <summary>
         /// Creates a syntactically valid description without relying on DNS or a live server.
         /// </summary>
         private static ApplicationDescription Application(string name = "device")
@@ -463,6 +1095,105 @@ namespace Opc.Ua.Gds.Tests.Onboarding
         private static TaskCompletionSource<bool> Signal()
         {
             return new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        /// <summary>
+        /// Pins the immutable description fields retained across a durable restart.
+        /// </summary>
+        private static void AssertApplicationDescription(
+            ApplicationDescription application,
+            string expectedUri,
+            string expectedDiscoveryUrl)
+        {
+            Assert.That(application.ApplicationUri, Is.EqualTo(expectedUri));
+            Assert.That(application.ApplicationType, Is.EqualTo(ApplicationType.Server));
+            Assert.That(application.DiscoveryUrls.Span.ToArray(), Is.EqualTo(new[] { expectedDiscoveryUrl }));
+        }
+
+        /// <summary>
+        /// Runs scripted processing and recovery while exposing deterministic ordering evidence.
+        /// </summary>
+        private sealed class ScriptedRecoveryProcessor :
+            IDeviceRegistrarPushProcessor,
+            IDeviceRegistrarPushRecoveryProcessor
+        {
+            private readonly string? m_blockedProcessingUri;
+            private readonly TaskCompletionSource<bool>? m_processingEntered;
+            private readonly TaskCompletionSource<bool>? m_processingRelease;
+            private readonly string? m_blockedReconciliationUri;
+            private readonly TaskCompletionSource<bool>? m_reconciliationEntered;
+            private readonly TaskCompletionSource<bool>? m_reconciliationRelease;
+            private readonly ConcurrentQueue<string> m_processedApplicationUris = new();
+            private readonly ConcurrentQueue<string> m_reconciledApplicationUris = new();
+            private readonly ConcurrentQueue<(string Event, string ApplicationUri)> m_events = new();
+            private int m_processingCancellationObserved;
+
+            public ScriptedRecoveryProcessor(
+                string? blockedProcessingUri = null,
+                TaskCompletionSource<bool>? processingEntered = null,
+                TaskCompletionSource<bool>? processingRelease = null,
+                string? blockedReconciliationUri = null,
+                TaskCompletionSource<bool>? reconciliationEntered = null,
+                TaskCompletionSource<bool>? reconciliationRelease = null)
+            {
+                m_blockedProcessingUri = blockedProcessingUri;
+                m_processingEntered = processingEntered;
+                m_processingRelease = processingRelease;
+                m_blockedReconciliationUri = blockedReconciliationUri;
+                m_reconciliationEntered = reconciliationEntered;
+                m_reconciliationRelease = reconciliationRelease;
+            }
+
+            public bool ProcessingCancellationObserved
+                => Volatile.Read(ref m_processingCancellationObserved) != 0;
+
+            public string[] ProcessedApplicationUris
+                => m_processedApplicationUris.ToArray();
+
+            public string[] ReconciledApplicationUris
+                => m_reconciledApplicationUris.ToArray();
+
+            public (string Event, string ApplicationUri)[] EventsFor(string applicationUri)
+            {
+                return m_events.Where(item => item.ApplicationUri == applicationUri).ToArray();
+            }
+
+            public async ValueTask ProcessAsync(
+                ApplicationDescription application,
+                CancellationToken cancellationToken = default)
+            {
+                string applicationUri = application.ApplicationUri!;
+                m_processedApplicationUris.Enqueue(applicationUri);
+                m_events.Enqueue(("process", applicationUri));
+                if (applicationUri == m_blockedProcessingUri)
+                {
+                    m_processingEntered!.TrySetResult(true);
+                    try
+                    {
+                        await m_processingRelease!.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        Interlocked.Exchange(ref m_processingCancellationObserved, 1);
+                        throw;
+                    }
+                }
+            }
+
+            public async ValueTask ReconcileInterruptedAsync(
+                ApplicationDescription application,
+                CancellationToken cancellationToken = default)
+            {
+                string applicationUri = application.ApplicationUri!;
+                m_reconciledApplicationUris.Enqueue(applicationUri);
+                m_events.Enqueue(("reconcile-enter", applicationUri));
+                if (applicationUri == m_blockedReconciliationUri)
+                {
+                    m_reconciliationEntered!.TrySetResult(true);
+                    await m_reconciliationRelease!.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                m_events.Enqueue(("reconcile-complete", applicationUri));
+            }
         }
 
         /// <summary>
@@ -488,11 +1219,26 @@ namespace Opc.Ua.Gds.Tests.Onboarding
         /// </summary>
         private sealed class WorkerLogs : ILoggerFactory, ILogger
         {
+            private readonly TaskCompletionSource<bool>[] m_completionSignals = [Signal(), Signal()];
+            private int m_completionCount;
+
             /// <summary>
             /// Gets completed log calls in publication order.
             /// </summary>
             public ConcurrentQueue<(LogLevel Level, EventId Event, Exception? Error, string Message)> Events { get; }
                 = new();
+
+            /// <summary>
+            /// Waits for the requested number of durable scheduler completion events.
+            /// </summary>
+            public Task WaitForCompletionCountAsync(int count)
+            {
+                if (count < 1 || count > m_completionSignals.Length)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(count));
+                }
+                return m_completionSignals[count - 1].Task.WaitAsync(k_deadline);
+            }
 
             /// <inheritdoc/>
             public ILogger CreateLogger(string categoryName)
@@ -527,6 +1273,14 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                 Func<TState, Exception?, string> formatter)
             {
                 Events.Enqueue((logLevel, eventId, exception, formatter(state, exception)));
+                if (eventId.Id == 100)
+                {
+                    int count = Interlocked.Increment(ref m_completionCount);
+                    if (count <= m_completionSignals.Length)
+                    {
+                        m_completionSignals[count - 1].TrySetResult(true);
+                    }
+                }
             }
 
             /// <inheritdoc/>

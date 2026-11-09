@@ -589,7 +589,7 @@ namespace Opc.Ua.Gds.Tests.Onboarding
         [TestCase(false)]
         [TestCase(true)]
         [CancelAfter(120_000)]
-        public async Task KeyPairFinishDoesNotSendAfterAuthenticatedClientCertificateChange(
+        public async Task KeyPairFinishRequiresOriginalClientCertificateAcrossReauthentication(
             bool rotate,
             CancellationToken ct)
         {
@@ -641,6 +641,20 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                 Assert.That(session.TransportChannel.ClientChannelCertificate, Is.EqualTo(m_otherIdentity.ToArray()));
                 Assert.That(m_otherIdentity, Is.Not.EqualTo(m_identity));
             }
+            else
+            {
+                NodeId previousSession = session.SessionId;
+                await session.ReconnectAsync(null, null, ct).ConfigureAwait(false);
+                while (session.SessionId == previousSession)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100), ct).ConfigureAwait(false);
+                }
+                Assert.Multiple(() =>
+                {
+                    Assert.That(session.SessionId, Is.Not.EqualTo(previousSession));
+                    Assert.That(session.TransportChannel.ClientChannelCertificate, Is.EqualTo(m_identity.ToArray()));
+                });
+            }
 
             string sourceName = m_telemetry.GetActivitySource(typeof(UaSCUaBinaryClientChannel).Assembly).Name;
             ActivityTraceId traceId = ActivityTraceId.CreateRandom();
@@ -673,7 +687,7 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                     });
                     Assert.Multiple(() =>
                     {
-                        Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSessionIdInvalid));
+                        Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSecurityChecksFailed));
                         Assert.That(Volatile.Read(ref sendEntries), Is.Zero);
                     });
                 }

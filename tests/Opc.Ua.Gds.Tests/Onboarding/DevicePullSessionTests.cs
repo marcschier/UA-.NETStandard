@@ -387,6 +387,17 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             }
 
             /// <inheritdoc/>
+            public ValueTask<ArrayOf<ManagerDescription>> GetManagersOnInstalledChannelAsync(
+                PullDcaSigningBinding? binding,
+                ByteString installedCertificate,
+                CancellationToken ct)
+            {
+                Assert.That(binding, Is.Null);
+                Assert.That(installedCertificate, Is.EqualTo(m_certificate));
+                return GetManagersAsync(ct);
+            }
+
+            /// <inheritdoc/>
             public ValueTask<NodeId> RegisterAsync(PullDcaManagedApplication application, CancellationToken ct)
             {
                 throw new AssertionException("Managed application registration was not requested.");

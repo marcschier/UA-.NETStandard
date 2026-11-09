@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Opc.Ua.Client;
@@ -57,14 +58,8 @@ namespace Opc.Ua.Gds.Client
             IPullDcaCertificateReceiptStore? receipts = null,
             IPullDcaSigningRecoveryProvider? signingRecovery = null)
             : this(
-                options,
-                CreateConnectionFactory(options, sessionAccessor, telemetry),
-                identityProvider,
-                credentialProvider,
-                softwareUpdateProvider,
-                discovery,
-                receipts,
-                signingRecovery)
+                options, sessionAccessor, identityProvider, credentialProvider, telemetry,
+                softwareUpdateProvider, discovery, receipts, signingRecovery, null, null)
         {
         }
 
@@ -83,15 +78,39 @@ namespace Opc.Ua.Gds.Client
             IPullDcaCertificateReceiptStore? receipts = null,
             IPullDcaSigningRecoveryProvider? signingRecovery = null)
             : this(
+                options, sessionAccessor, identityProvider, credentialProvider, telemetry,
+                softwareUpdateProvider, discovery, receipts, signingRecovery, null,
+                newKeyPairCredentialProvider ?? throw new ArgumentNullException(nameof(newKeyPairCredentialProvider)))
+        {
+        }
+
+        /// <summary>
+        /// Creates a workflow with an optional host-owned signing journal.
+        /// The journal coordinates competing writers in its own storage scope.
+        /// </summary>
+        public PullDcaWorkflow(
+            PullDcaOptions options,
+            Func<PullDcaRegistrar, CancellationToken, ValueTask<ManagedSession>> sessionAccessor,
+            IPullDcaIdentityProvider identityProvider,
+            IPullDcaCredentialProvider credentialProvider,
+            ITelemetryContext telemetry,
+            IPullDcaSoftwareUpdateProvider? softwareUpdateProvider,
+            IPullDcaRegistrarDiscovery? discovery,
+            IPullDcaCertificateReceiptStore? receipts,
+            IPullDcaSigningRecoveryProvider? signingRecovery,
+            IPullDcaSigningJournal? signingJournal,
+            IPullDcaNewKeyPairCredentialProvider? newKeyPairCredentialProvider = null)
+            : this(
                 options,
-                CreateConnectionFactory(options, sessionAccessor, telemetry),
+                CreateConnectionFactory(options, sessionAccessor, telemetry, signingJournal, signingRecovery),
                 identityProvider,
                 credentialProvider,
                 softwareUpdateProvider,
                 discovery,
                 receipts,
                 signingRecovery,
-                newKeyPairCredentialProvider ?? throw new ArgumentNullException(nameof(newKeyPairCredentialProvider)))
+                signingJournal,
+                newKeyPairCredentialProvider)
         {
         }
 
@@ -107,6 +126,7 @@ namespace Opc.Ua.Gds.Client
             IPullDcaRegistrarDiscovery? discovery = null,
             IPullDcaCertificateReceiptStore? receipts = null,
             IPullDcaSigningRecoveryProvider? signingRecovery = null,
+            IPullDcaSigningJournal? signingJournal = null,
             IPullDcaNewKeyPairCredentialProvider? newKeyPairCredentialProvider = null)
         {
             if (options is null)
@@ -134,12 +154,13 @@ namespace Opc.Ua.Gds.Client
             m_connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
             m_identityProvider = identityProvider ?? throw new ArgumentNullException(nameof(identityProvider));
             m_credentialProvider = credentialProvider ?? throw new ArgumentNullException(nameof(credentialProvider));
-            m_newKeyPairCredentialProvider = newKeyPairCredentialProvider ??
-                credentialProvider as IPullDcaNewKeyPairCredentialProvider;
             m_softwareUpdateProvider = softwareUpdateProvider;
             m_discovery = discovery;
             m_receipts = receipts;
             m_signingRecovery = signingRecovery;
+            m_signingJournal = signingJournal;
+            m_newKeyPairCredentialProvider = newKeyPairCredentialProvider ??
+                credentialProvider as IPullDcaNewKeyPairCredentialProvider;
             m_registrars = options.Registrars.ToArray() ?? [];
             m_maximumFinishAttempts = options.MaximumFinishAttempts;
             m_maximumNewKeyPairRestarts = options.MaximumNewKeyPairRestarts;
@@ -171,72 +192,31 @@ namespace Opc.Ua.Gds.Client
         /// then registers and provisions the requested managed applications.
         /// Service and host-provider failures propagate without being converted to success or automatically retried.
         /// </summary>
-        public async ValueTask<PullDcaResult> RunAsync(
+        public ValueTask<PullDcaResult> RunAsync(
             PullDcaRegistrar registrar,
             PullDcaRequest request,
             IProgress<PullDcaProgress>? progress = null,
             CancellationToken cancellationToken = default)
         {
-            ValidateRegistrar(registrar);
-            registrar = PullDcaConnection.SnapshotRegistrar(registrar);
-            request = SnapshotRequest(request);
-            ValidateKeyPairSupport(request.DcaCertificateRequestMode, request.ManagedApplications);
-            cancellationToken.ThrowIfCancellationRequested();
-            if (Interlocked.CompareExchange(ref m_running, 1, 0) != 0)
+            return RunCoreAsync(registrar, request, progress, null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Runs the workflow with a host-owned operation for the installed DCA's manager request.
+        /// Capture the operation for the intended deployment before starting admission or reading its journal.
+        /// </summary>
+        public ValueTask<PullDcaResult> RunAsync(
+            PullDcaRegistrar registrar,
+            PullDcaRequest request,
+            IProgress<PullDcaProgress>? progress,
+            CancellationToken cancellationToken,
+            IPullDcaInstalledManagerOperation managerOperation)
+        {
+            if (managerOperation == null)
             {
-                throw new ServiceResultException(StatusCodes.BadInvalidState, "A pull workflow is already running.");
+                throw new ArgumentNullException(nameof(managerOperation));
             }
-            try
-            {
-                using var timeout = CreateDeadline(cancellationToken);
-                CancellationToken ct = timeout.Token;
-                Report(progress, PullDcaStage.Connecting);
-                IPullDcaConnection connection = await m_connectionFactory(registrar, ct).ConfigureAwait(false);
-                Report(progress, PullDcaStage.ProvidingIdentities);
-                PullDcaIdentitySelection identity = await connection.ProvideIdentitiesAsync(
-                    request.IdentityOffer, ct).ConfigureAwait(false);
-                if (identity == null || identity.SelectedIdentity.IsEmpty ||
-                    !request.IdentityOffer.Identities.Contains(identity.SelectedIdentity) ||
-                    identity.ApplicationId.IsNull || identity.MatchingTicket == null)
-                {
-                    throw new ServiceResultException(StatusCodes.BadSecurityChecksFailed);
-                }
-
-                Report(progress, PullDcaStage.ActivatingIdentity, identity.ApplicationId);
-                await m_identityProvider.ActivateAsync(identity.SelectedIdentity, ct).ConfigureAwait(false);
-                await connection.ReloadAndReconnectAsync(ct).ConfigureAwait(false);
-
-                if (identity.SoftwareUpdateManager is { } manager)
-                {
-                    Report(progress, PullDcaStage.UpdatingSoftware, identity.ApplicationId);
-                    if (m_softwareUpdateProvider == null)
-                    {
-                        throw new ServiceResultException(
-                            StatusCodes.BadConfigurationError, "A real software-update provider is required.");
-                    }
-                    await m_softwareUpdateProvider.CompleteAsync(
-                        registrar, identity, manager, ct).ConfigureAwait(false);
-                }
-
-                PullDcaCredentials dcaCredentials = await ProvisionAsync(
-                    registrar, connection, identity.ApplicationId, request.DcaCertificateProfile,
-                    request.DcaCertificateRequestMode, progress, ct)
-                    .ConfigureAwait(false);
-                Report(progress, PullDcaStage.ActivatingDca, identity.ApplicationId);
-                await connection.ReloadAndReconnectAsync(ct).ConfigureAwait(false);
-                Report(progress, PullDcaStage.GettingManagers, identity.ApplicationId);
-                ArrayOf<ManagerDescription> managers = await connection.GetManagersAsync(ct).ConfigureAwait(false);
-
-                ArrayOf<PullDcaProvisionedApplication> applications = await ProvisionManagedApplicationsAsync(
-                    registrar, connection, request.ManagedApplications, progress, ct).ConfigureAwait(false);
-                ct.ThrowIfCancellationRequested();
-                Report(progress, PullDcaStage.Completed, identity.ApplicationId);
-                return new PullDcaResult(identity, dcaCredentials, managers, applications);
-            }
-            finally
-            {
-                Volatile.Write(ref m_running, 0);
-            }
+            return RunCoreAsync(registrar, request, progress, managerOperation, cancellationToken);
         }
 
         /// <summary>
@@ -282,17 +262,202 @@ namespace Opc.Ua.Gds.Client
         }
 
         /// <summary>
+        /// Retrieves managers after a retained pull installation using its installed certificate and registrar.
+        /// The caller verifies the retained receipt, private key, and applied trust before invoking this method.
+        /// </summary>
+        public async ValueTask<ArrayOf<ManagerDescription>> ResumeInstalledAsync(
+            PullDcaSigningBinding binding,
+            ByteString installedCertificate,
+            IProgress<PullDcaProgress>? progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (binding == null)
+            {
+                throw new ArgumentNullException(nameof(binding));
+            }
+            if (binding.AttemptId == Guid.Empty)
+            {
+                throw new ArgumentException("The retained attempt identifier is required.", nameof(binding));
+            }
+            if (installedCertificate.IsEmpty)
+            {
+                throw new ArgumentException("The installed certificate is required.", nameof(installedCertificate));
+            }
+            binding = PullDcaConnection.SnapshotBinding(binding);
+            installedCertificate = ByteString.From(installedCertificate.Span);
+            ValidateRegistrar(binding.Registrar);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (Interlocked.CompareExchange(ref m_running, 1, 0) != 0)
+            {
+                throw new ServiceResultException(StatusCodes.BadInvalidState, "A pull workflow is already running.");
+            }
+            try
+            {
+                using var timeout = CreateDeadline(cancellationToken);
+                Report(progress, PullDcaStage.Connecting, binding.ApplicationId, binding.RequestId);
+                IPullDcaConnection connection = await m_connectionFactory(binding.Registrar, timeout.Token)
+                    .ConfigureAwait(false);
+                Report(progress, PullDcaStage.GettingManagers, binding.ApplicationId, binding.RequestId);
+                ArrayOf<ManagerDescription> managers = await connection.GetManagersOnInstalledChannelAsync(
+                    binding, installedCertificate, timeout.Token).ConfigureAwait(false);
+                timeout.Token.ThrowIfCancellationRequested();
+                Report(progress, PullDcaStage.Completed, binding.ApplicationId, binding.RequestId);
+                return managers;
+            }
+            finally
+            {
+                Volatile.Write(ref m_running, 0);
+            }
+        }
+
+        /// <summary>
         /// Completes a previously persisted signing request without creating another private key or request.
         /// The host restores the original registrar, channel identity, retained private key and certificate profile.
         /// This installs credentials only; the host reconnects the DCA and resumes its remaining lifecycle steps.
         /// </summary>
-        public async ValueTask<PullDcaCredentials> CompleteCertificateRequestAsync(
+        public ValueTask<PullDcaCredentials> CompleteCertificateRequestAsync(
             PullDcaRegistrar registrar,
             NodeId applicationId,
             NodeId requestId,
             PullDcaCertificateProfile profile,
             IProgress<PullDcaProgress>? progress = null,
             CancellationToken cancellationToken = default)
+        {
+            return CompleteCertificateRequestCoreAsync(
+                registrar, applicationId, requestId, profile, null, progress, cancellationToken);
+        }
+
+        /// <summary>
+        /// Completes the exact retained attempt after resolving its identifiers for the selected session.
+        /// A reset or replacement request cannot be mistaken for this attempt.
+        /// </summary>
+        public ValueTask<PullDcaCredentials> CompleteCertificateRequestAsync(
+            PullDcaSigningBinding binding,
+            IProgress<PullDcaProgress>? progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (binding == null)
+            {
+                throw new ArgumentNullException(nameof(binding));
+            }
+            if (binding.AttemptId == Guid.Empty)
+            {
+                throw new ArgumentException("The retained attempt identifier is required.", nameof(binding));
+            }
+            return CompleteCertificateRequestCoreAsync(
+                binding.Registrar, binding.ApplicationId, binding.RequestId, binding.Profile,
+                binding.AttemptId, progress, cancellationToken);
+        }
+
+        /// <summary>
+        /// Executes the pull workflow using the optional deployment-bound manager operation.
+        /// </summary>
+        private async ValueTask<PullDcaResult> RunCoreAsync(
+            PullDcaRegistrar registrar,
+            PullDcaRequest request,
+            IProgress<PullDcaProgress>? progress,
+            IPullDcaInstalledManagerOperation? managerOperation,
+            CancellationToken cancellationToken)
+        {
+            ValidateRegistrar(registrar);
+            registrar = PullDcaConnection.SnapshotRegistrar(registrar);
+            request = SnapshotRequest(request);
+            ValidateKeyPairSupport(request.DcaCertificateRequestMode, request.ManagedApplications);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (Interlocked.CompareExchange(ref m_running, 1, 0) != 0)
+            {
+                throw new ServiceResultException(StatusCodes.BadInvalidState, "A pull workflow is already running.");
+            }
+            try
+            {
+                using var timeout = CreateDeadline(cancellationToken);
+                CancellationToken ct = timeout.Token;
+                Report(progress, PullDcaStage.Connecting);
+                IPullDcaConnection connection = await m_connectionFactory(registrar, ct).ConfigureAwait(false);
+                Report(progress, PullDcaStage.ProvidingIdentities);
+                PullDcaIdentitySelection identity = await connection.ProvideIdentitiesAsync(
+                    request.IdentityOffer, ct).ConfigureAwait(false);
+                if (identity != null)
+                {
+                    identity = identity with
+                    {
+                        SelectedIdentity = identity.SelectedIdentity.Copy(),
+                        ApplicationId = PullDcaConnection.SnapshotNodeId(identity.ApplicationId)
+                    };
+                }
+                if (identity == null || identity.SelectedIdentity.IsEmpty ||
+                    !request.IdentityOffer.Identities.Contains(identity.SelectedIdentity) ||
+                    identity.ApplicationId.IsNull || identity.MatchingTicket == null)
+                {
+                    throw new ServiceResultException(StatusCodes.BadSecurityChecksFailed);
+                }
+
+                Report(progress, PullDcaStage.ActivatingIdentity, identity.ApplicationId);
+                await m_identityProvider.ActivateAsync(identity.SelectedIdentity, ct).ConfigureAwait(false);
+                await connection.ReloadAndReconnectAsync(ct).ConfigureAwait(false);
+
+                if (identity.SoftwareUpdateManager is { } manager)
+                {
+                    Report(progress, PullDcaStage.UpdatingSoftware, identity.ApplicationId);
+                    if (m_softwareUpdateProvider == null)
+                    {
+                        throw new ServiceResultException(
+                            StatusCodes.BadConfigurationError, "A real software-update provider is required.");
+                    }
+                    await m_softwareUpdateProvider.CompleteAsync(
+                        registrar, identity, manager, ct).ConfigureAwait(false);
+                }
+
+                (PullDcaCredentials dcaCredentials, PullDcaSigningBinding? binding) = await ProvisionAsync(
+                    registrar, connection, identity.ApplicationId, request.DcaCertificateProfile,
+                    request.DcaCertificateRequestMode, progress, ct)
+                    .ConfigureAwait(false);
+                Report(progress, PullDcaStage.ActivatingDca, identity.ApplicationId);
+                await connection.ReloadAndReconnectAsync(ct).ConfigureAwait(false);
+                Report(progress, PullDcaStage.GettingManagers, identity.ApplicationId);
+                ArrayOf<ManagerDescription> managers;
+                if (managerOperation == null)
+                {
+                    managers = await connection.GetManagersOnInstalledChannelAsync(
+                        null, dcaCredentials.Certificate, ct).ConfigureAwait(false);
+                }
+                else
+                {
+                    if (binding == null)
+                    {
+                        throw new ServiceResultException(
+                            StatusCodes.BadNotSupported, "The connection cannot identify the installed pull attempt.");
+                    }
+                    PullDcaSigningBinding dispatchBinding = PullDcaConnection.SnapshotBinding(binding);
+                    ByteString dispatchCertificate = ByteString.From(dcaCredentials.Certificate.Span);
+                    managers = await managerOperation.ExecuteAsync(
+                        PullDcaConnection.SnapshotBinding(dispatchBinding),
+                        ByteString.From(dispatchCertificate.Span),
+                        token => connection.GetManagersOnInstalledChannelAsync(
+                            dispatchBinding, dispatchCertificate, token),
+                        ct).ConfigureAwait(false);
+                }
+
+                ArrayOf<PullDcaProvisionedApplication> applications = await ProvisionManagedApplicationsAsync(
+                    registrar, connection, request.ManagedApplications, progress, ct).ConfigureAwait(false);
+                ct.ThrowIfCancellationRequested();
+                Report(progress, PullDcaStage.Completed, identity.ApplicationId);
+                return new PullDcaResult(identity, dcaCredentials, managers, applications);
+            }
+            finally
+            {
+                Volatile.Write(ref m_running, 0);
+            }
+        }
+
+        private async ValueTask<PullDcaCredentials> CompleteCertificateRequestCoreAsync(
+            PullDcaRegistrar registrar,
+            NodeId applicationId,
+            NodeId requestId,
+            PullDcaCertificateProfile profile,
+            Guid? expectedAttemptId,
+            IProgress<PullDcaProgress>? progress,
+            CancellationToken cancellationToken)
         {
             ValidateRegistrar(registrar);
             ValidateProfile(profile);
@@ -315,9 +480,11 @@ namespace Opc.Ua.Gds.Client
                 Report(progress, PullDcaStage.Connecting, applicationId, requestId);
                 IPullDcaConnection connection = await m_connectionFactory(registrar, timeout.Token)
                     .ConfigureAwait(false);
-                return await FinishAndInstallAsync(
-                    registrar, connection, applicationId, requestId, profile, progress, timeout.Token)
+                (PullDcaCredentials credentials, _) = await FinishAndInstallAsync(
+                    registrar, connection, applicationId, requestId, profile, expectedAttemptId, progress,
+                    timeout.Token)
                     .ConfigureAwait(false);
+                return credentials;
             }
             finally
             {
@@ -342,11 +509,12 @@ namespace Opc.Ua.Gds.Client
                 ct.ThrowIfCancellationRequested();
                 Report(progress, PullDcaStage.RegisteringApplication);
                 NodeId applicationId = await connection.RegisterAsync(application, ct).ConfigureAwait(false);
+                applicationId = PullDcaConnection.SnapshotNodeId(applicationId);
                 if (applicationId.IsNull)
                 {
                     throw new ServiceResultException(StatusCodes.BadUnexpectedError);
                 }
-                PullDcaCredentials credentials = await ProvisionAsync(
+                (PullDcaCredentials credentials, _) = await ProvisionAsync(
                     registrar, connection, applicationId, application.CertificateProfile,
                     application.CertificateRequestMode, progress, ct)
                     .ConfigureAwait(false);
@@ -355,7 +523,7 @@ namespace Opc.Ua.Gds.Client
             return applications.ToArrayOf();
         }
 
-        private async ValueTask<PullDcaCredentials> ProvisionAsync(
+        private async ValueTask<(PullDcaCredentials Credentials, PullDcaSigningBinding? Binding)> ProvisionAsync(
             PullDcaRegistrar registrar,
             IPullDcaConnection connection,
             NodeId applicationId,
@@ -366,29 +534,57 @@ namespace Opc.Ua.Gds.Client
         {
             if (requestMode == PullDcaCertificateRequestMode.NewKeyPairRequest)
             {
-                return await ProvisionNewKeyPairAsync(
+                PullDcaCredentials keyPairCredentials = await ProvisionNewKeyPairAsync(
                     connection, applicationId, profile, progress, ct).ConfigureAwait(false);
+                return (keyPairCredentials, null);
             }
             Report(progress, PullDcaStage.RequestingCertificate, applicationId);
             ByteString csr = await m_credentialProvider.CreateSigningRequestAsync(applicationId, profile, ct)
                 .ConfigureAwait(false);
+            csr = csr.Copy();
             if (csr.IsEmpty)
             {
                 throw new ServiceResultException(
                     StatusCodes.BadConfigurationError, "The CSR provider returned no CSR.");
             }
-            NodeId requestId = await connection.StartAsync(applicationId, profile, csr, ct).ConfigureAwait(false);
+            NodeId requestId;
+            if (m_signingJournal != null)
+            {
+                if (m_credentialProvider is not IPullDcaSigningKeyEvidenceProvider keyEvidence ||
+                    connection is not IPullDcaBoundSigningConnection boundConnection)
+                {
+                    throw new ServiceResultException(
+                        StatusCodes.BadNotSupported,
+                        "Journaled signing requires a retained key and a channel-bound connection.");
+                }
+                ByteString keyCertificate = await keyEvidence.GetSigningKeyCertificateAsync(
+                    applicationId, profile, csr, ct).ConfigureAwait(false);
+                keyCertificate = keyCertificate.Copy();
+                if (keyCertificate.IsEmpty)
+                {
+                    throw new ServiceResultException(
+                        StatusCodes.BadConfigurationError, "The retained signing key certificate is missing.");
+                }
+                requestId = await boundConnection.StartWithEvidenceAsync(
+                    applicationId, profile, csr, keyCertificate, ct).ConfigureAwait(false);
+            }
+            else
+            {
+                requestId = await connection.StartAsync(applicationId, profile, csr, ct).ConfigureAwait(false);
+            }
+            requestId = PullDcaConnection.SnapshotNodeId(requestId);
             if (requestId.IsNull)
             {
                 throw new ServiceResultException(StatusCodes.BadUnexpectedError);
             }
-            if (m_signingRecovery is IPullDcaSigningRequestObserver observer)
+            if (m_signingRecovery is IPullDcaSigningRequestObserver observer &&
+                !ReferenceEquals(m_signingRecovery, m_signingJournal))
             {
                 await observer.OnSigningRequestStartedAsync(registrar, applicationId, requestId, profile, csr, ct)
                     .ConfigureAwait(false);
             }
-            return await FinishAndInstallAsync(registrar, connection, applicationId, requestId, profile, progress, ct)
-                .ConfigureAwait(false);
+            return await FinishAndInstallAsync(
+                registrar, connection, applicationId, requestId, profile, null, progress, ct).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -402,11 +598,18 @@ namespace Opc.Ua.Gds.Client
             IProgress<PullDcaProgress>? progress,
             CancellationToken ct)
         {
+            if (m_newKeyPairCredentialProvider == null)
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadConfigurationError,
+                    $"A {nameof(IPullDcaNewKeyPairCredentialProvider)} is required for a new key-pair request.");
+            }
             for (int restart = 0; restart <= m_maximumNewKeyPairRestarts; restart++)
             {
                 Report(progress, PullDcaStage.RequestingCertificate, applicationId);
                 NodeId requestId = await connection.StartNewKeyPairAsync(applicationId, profile, ct)
                     .ConfigureAwait(false);
+                requestId = PullDcaConnection.SnapshotNodeId(requestId);
                 if (requestId.IsNull)
                 {
                     throw new ServiceResultException(StatusCodes.BadUnexpectedError);
@@ -446,42 +649,49 @@ namespace Opc.Ua.Gds.Client
                         break;
                     }
 
-                    if (certificate.IsEmpty != privateKeyPfx.IsEmpty)
+                    try
                     {
-                        throw new ServiceResultException(
-                            StatusCodes.BadSecurityChecksFailed,
-                            "The key-pair request returned incomplete certificate or private-key output.");
-                    }
-
-                    if (!certificate.IsEmpty)
-                    {
-                        foreach (ByteString issuer in issuers)
+                        if (certificate.IsEmpty != privateKeyPfx.IsEmpty)
                         {
-                            if (issuer.IsEmpty)
+                            throw new ServiceResultException(
+                                StatusCodes.BadSecurityChecksFailed,
+                                "The key-pair request returned incomplete certificate or private-key output.");
+                        }
+
+                        if (!certificate.IsEmpty)
+                        {
+                            foreach (ByteString issuer in issuers)
                             {
-                                throw new ServiceResultException(
-                                    StatusCodes.BadSecurityChecksFailed,
-                                    "The key-pair request returned an empty issuer certificate.");
+                                if (issuer.IsEmpty)
+                                {
+                                    throw new ServiceResultException(
+                                        StatusCodes.BadSecurityChecksFailed,
+                                        "The key-pair request returned an empty issuer certificate.");
+                                }
                             }
+                            ct.ThrowIfCancellationRequested();
+                            Report(progress, PullDcaStage.ReadingTrustList, applicationId, requestId);
+                            TrustListDataType trustList = await connection.ReadTrustListAsync(
+                                applicationId, profile.CertificateGroupId, ct).ConfigureAwait(false);
+                            if (trustList == null)
+                            {
+                                throw new ServiceResultException(StatusCodes.BadUnexpectedError);
+                            }
+                            var credentials = new PullDcaCredentials(certificate, issuers, trustList);
+                            Report(progress, PullDcaStage.InstallingCredentials, applicationId, requestId);
+                            await m_newKeyPairCredentialProvider!.InstallNewKeyPairAsync(
+                                applicationId, profile, credentials, privateKeyPfx, ct).ConfigureAwait(false);
+                            return credentials;
                         }
-                        ct.ThrowIfCancellationRequested();
-                        Report(progress, PullDcaStage.ReadingTrustList, applicationId, requestId);
-                        TrustListDataType trustList = await connection.ReadTrustListAsync(
-                            applicationId, profile.CertificateGroupId, ct).ConfigureAwait(false);
-                        if (trustList == null)
-                        {
-                            throw new ServiceResultException(StatusCodes.BadUnexpectedError);
-                        }
-                        var credentials = new PullDcaCredentials(certificate, issuers, trustList);
-                        Report(progress, PullDcaStage.InstallingCredentials, applicationId, requestId);
-                        await m_newKeyPairCredentialProvider!.InstallNewKeyPairAsync(
-                            applicationId, profile, credentials, privateKeyPfx, ct).ConfigureAwait(false);
-                        return credentials;
-                    }
 
-                    if (attempt + 1 < m_maximumFinishAttempts)
+                        if (attempt + 1 < m_maximumFinishAttempts)
+                        {
+                            await Task.Delay(m_finishRetryDelay, ct).ConfigureAwait(false);
+                        }
+                    }
+                    finally
                     {
-                        await Task.Delay(m_finishRetryDelay, ct).ConfigureAwait(false);
+                        ClearPrivateKeyPfx(privateKeyPfx);
                     }
                 }
 
@@ -494,45 +704,98 @@ namespace Opc.Ua.Gds.Client
             throw new ServiceResultException(StatusCodes.BadInvalidState);
         }
 
+        private static void ClearPrivateKeyPfx(ByteString privateKeyPfx)
+        {
+            if (MemoryMarshal.TryGetArray(privateKeyPfx.Memory, out ArraySegment<byte> bytes) && bytes.Array != null)
+            {
+                Array.Clear(bytes.Array, bytes.Offset, bytes.Count);
+            }
+        }
+
         /// <summary>
         /// Uses one existing certificate request for bounded polling and host-owned installation.
         /// </summary>
-        private async ValueTask<PullDcaCredentials> FinishAndInstallAsync(
+        private async ValueTask<(PullDcaCredentials Credentials, PullDcaSigningBinding? Binding)> FinishAndInstallAsync(
             PullDcaRegistrar registrar,
             IPullDcaConnection connection,
             NodeId applicationId,
             NodeId requestId,
             PullDcaCertificateProfile profile,
+            Guid? expectedAttemptId,
             IProgress<PullDcaProgress>? progress,
             CancellationToken ct)
         {
-            PullDcaCertificateReceipt receipt = m_receipts == null
-                ? await ReceiveCertificateAsync(registrar, connection, applicationId, requestId, profile, progress, ct)
-                    .ConfigureAwait(false)
-                : await m_receipts.GetOrCreateAsync(
-                    registrar, applicationId, requestId, profile,
-                    token => ReceiveCertificateAsync(
-                        registrar, connection, applicationId, requestId, profile, progress, token), ct)
+            PullDcaSigningBinding? binding = null;
+            if (connection is IPullDcaBoundSigningConnection boundConnection)
+            {
+                binding = await boundConnection.GetSigningBindingAsync(applicationId, requestId, ct)
                     .ConfigureAwait(false);
-            if (receipt == null || receipt.Certificate.IsEmpty)
+                if (binding.Profile != profile ||
+                    (expectedAttemptId.HasValue && binding.AttemptId != expectedAttemptId.Value))
+                {
+                    throw new ServiceResultException(
+                        StatusCodes.BadSecurityChecksFailed, "The signing attempt differs from the retained request.");
+                }
+            }
+            else if (m_signingJournal != null || expectedAttemptId.HasValue)
             {
                 throw new ServiceResultException(
-                    StatusCodes.BadConfigurationError, "The signing receipt contains no issued certificate.");
+                    StatusCodes.BadNotSupported, "The connection cannot validate a retained signing channel.");
             }
-            receipt = new PullDcaCertificateReceipt(
-                receipt.Certificate.Copy(), SnapshotBytes(receipt.IssuerCertificates));
-            ct.ThrowIfCancellationRequested();
-            Report(progress, PullDcaStage.ReadingTrustList, applicationId, requestId);
-            TrustListDataType trustList = await connection.ReadTrustListAsync(
-                applicationId, profile.CertificateGroupId, ct).ConfigureAwait(false);
-            if (trustList == null)
+            PullDcaCredentials? credentials = m_signingJournal == null
+                ? null
+                : await m_signingJournal.GetReceivedAsync(binding!, ct).ConfigureAwait(false);
+            if (credentials == null)
             {
-                throw new ServiceResultException(StatusCodes.BadUnexpectedError);
+                if (m_signingJournal != null && m_receipts == null)
+                {
+                    throw new ServiceResultException(
+                        StatusCodes.BadConfigurationError, "A journaled request requires a signing receipt store.");
+                }
+                PullDcaCertificateReceipt receipt = m_receipts == null
+                    ? await ReceiveCertificateAsync(
+                        registrar, connection, applicationId, requestId, profile, progress, ct).ConfigureAwait(false)
+                    : await m_receipts.GetOrCreateAsync(
+                        registrar, applicationId, requestId, profile,
+                        token => ReceiveCertificateAsync(
+                            registrar, connection, applicationId, requestId, profile, progress, token), ct)
+                        .ConfigureAwait(false);
+                if (receipt == null || receipt.Certificate.IsEmpty)
+                {
+                    throw new ServiceResultException(
+                        StatusCodes.BadConfigurationError, "The signing receipt contains no issued certificate.");
+                }
+                receipt = new PullDcaCertificateReceipt(
+                    receipt.Certificate.Copy(), SnapshotBytes(receipt.IssuerCertificates));
+                ct.ThrowIfCancellationRequested();
+                Report(progress, PullDcaStage.ReadingTrustList, applicationId, requestId);
+                TrustListDataType trustList = await connection.ReadTrustListAsync(
+                    applicationId, profile.CertificateGroupId, ct).ConfigureAwait(false);
+                if (trustList == null)
+                {
+                    throw new ServiceResultException(StatusCodes.BadUnexpectedError);
+                }
+                credentials = new PullDcaCredentials(receipt.Certificate, receipt.IssuerCertificates, trustList);
+                if (m_signingJournal != null)
+                {
+                    await m_signingJournal.RecordReceivedAsync(binding!, credentials, ct).ConfigureAwait(false);
+                }
             }
-            var credentials = new PullDcaCredentials(receipt.Certificate, receipt.IssuerCertificates, trustList);
             Report(progress, PullDcaStage.InstallingCredentials, applicationId, requestId);
-            await m_credentialProvider.InstallAsync(applicationId, credentials, ct).ConfigureAwait(false);
-            return credentials;
+            if (binding != null && m_credentialProvider is IPullDcaBoundCredentialProvider boundCredentials)
+            {
+                await boundCredentials.InstallAsync(
+                    PullDcaConnection.SnapshotBinding(binding), credentials, ct).ConfigureAwait(false);
+            }
+            else
+            {
+                await m_credentialProvider.InstallAsync(applicationId, credentials, ct).ConfigureAwait(false);
+            }
+            if (m_signingJournal != null)
+            {
+                await m_signingJournal.RecordInstalledAsync(binding!, ct).ConfigureAwait(false);
+            }
+            return (credentials, binding);
         }
 
         /// <summary>
@@ -615,7 +878,7 @@ namespace Opc.Ua.Gds.Client
         {
             var (types, certificates) = await connection.GetCertificatesAsync(
                 applicationId, profile.CertificateGroupId, ct).ConfigureAwait(false);
-            if (types.Count != certificates.Count)
+            if (types.IsNull || certificates.IsNull || types.Count != certificates.Count)
             {
                 throw new ServiceResultException(
                     StatusCodes.BadUnexpectedError, "GetCertificates returned inconsistent output arrays.");
@@ -663,7 +926,9 @@ namespace Opc.Ua.Gds.Client
         private static Func<PullDcaRegistrar, CancellationToken, ValueTask<IPullDcaConnection>> CreateConnectionFactory(
             PullDcaOptions options,
             Func<PullDcaRegistrar, CancellationToken, ValueTask<ManagedSession>> sessionAccessor,
-            ITelemetryContext telemetry)
+            ITelemetryContext telemetry,
+            IPullDcaSigningJournal? signingJournal,
+            IPullDcaSigningRecoveryProvider? signingRecovery)
         {
             if (options is null)
             {
@@ -679,7 +944,8 @@ namespace Opc.Ua.Gds.Client
             }
             long maximumTrustListSize = options.MaximumTrustListSize;
             return async (registrar, ct) => new PullDcaConnection(
-                await sessionAccessor(registrar, ct).ConfigureAwait(false), registrar, telemetry, maximumTrustListSize);
+                await sessionAccessor(registrar, ct).ConfigureAwait(false), registrar, telemetry,
+                maximumTrustListSize, signingJournal, signingRecovery as IPullDcaSigningAssignmentsObserver);
         }
 
         private static void ValidateRegistrar(PullDcaRegistrar registrar)
@@ -793,7 +1059,8 @@ namespace Opc.Ua.Gds.Client
         /// <summary>
         /// Validates a requested certificate provisioning mode.
         /// </summary>
-        private static PullDcaCertificateRequestMode ValidateRequestMode(PullDcaCertificateRequestMode requestMode)
+        private static PullDcaCertificateRequestMode ValidateRequestMode(
+            PullDcaCertificateRequestMode requestMode)
         {
             if (requestMode is not PullDcaCertificateRequestMode.SigningRequest and
                 not PullDcaCertificateRequestMode.NewKeyPairRequest)
@@ -871,11 +1138,6 @@ namespace Opc.Ua.Gds.Client
         private readonly IPullDcaCredentialProvider m_credentialProvider;
 
         /// <summary>
-        /// Optional host-owned installer for server-generated key pairs.
-        /// </summary>
-        private readonly IPullDcaNewKeyPairCredentialProvider? m_newKeyPairCredentialProvider;
-
-        /// <summary>
         /// Optional real software-update bridge.
         /// </summary>
         private readonly IPullDcaSoftwareUpdateProvider? m_softwareUpdateProvider;
@@ -896,6 +1158,14 @@ namespace Opc.Ua.Gds.Client
         private readonly IPullDcaSigningRecoveryProvider? m_signingRecovery;
 
         /// <summary>
+        /// Optional host-owned signing and installation journal.
+        /// </summary>
+        private readonly IPullDcaSigningJournal? m_signingJournal;
+
+        /// <summary>Optional host-owned installer for server-generated key pairs.</summary>
+        private readonly IPullDcaNewKeyPairCredentialProvider? m_newKeyPairCredentialProvider;
+
+        /// <summary>
         /// Configured registrar candidates, not a durable lifecycle store.
         /// </summary>
         private readonly ArrayOf<PullDcaRegistrar> m_registrars;
@@ -905,9 +1175,7 @@ namespace Opc.Ua.Gds.Client
         /// </summary>
         private readonly int m_maximumFinishAttempts;
 
-        /// <summary>
-        /// Maximum fresh key-pair requests after a consumed completion request.
-        /// </summary>
+        /// <summary>Maximum fresh key-pair requests after a consumed completion request.</summary>
         private readonly int m_maximumNewKeyPairRestarts;
 
         /// <summary>

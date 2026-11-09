@@ -949,6 +949,16 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                 return new ValueTask<ArrayOf<ManagerDescription>>(managers);
             }
 
+            public ValueTask<ArrayOf<ManagerDescription>> GetManagersOnInstalledChannelAsync(
+                PullDcaSigningBinding? binding,
+                ByteString installedCertificate,
+                CancellationToken ct)
+            {
+                Assert.That(binding, Is.Null);
+                Assert.That(installedCertificate.IsEmpty, Is.False);
+                return GetManagersAsync(ct);
+            }
+
             public ValueTask<NodeId> RegisterAsync(PullDcaManagedApplication application, CancellationToken ct)
             {
                 throw new NotSupportedException("Only the DCA is provisioned.");

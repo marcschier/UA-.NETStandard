@@ -363,13 +363,58 @@ namespace Opc.Ua.Gds.Client
     }
 
     /// <summary>
+    /// Installs credentials only for the exact signing attempt retained by the host.
+    /// </summary>
+    public interface IPullDcaBoundCredentialProvider
+    {
+        /// <summary>
+        /// Verifies and applies credentials against the supplied signing binding.
+        /// </summary>
+        ValueTask InstallAsync(
+            PullDcaSigningBinding binding,
+            PullDcaCredentials credentials,
+            CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
+    /// Executes the installed DCA's manager request within a host-owned deployment operation.
+    /// </summary>
+    public interface IPullDcaInstalledManagerOperation
+    {
+        /// <summary>
+        /// Validates the installed attempt, invokes the supplied manager request once, and returns its result.
+        /// </summary>
+        ValueTask<ArrayOf<ManagerDescription>> ExecuteAsync(
+            PullDcaSigningBinding binding,
+            ByteString installedCertificate,
+            Func<CancellationToken, ValueTask<ArrayOf<ManagerDescription>>> getManagers,
+            CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
+    /// Returns public evidence identifying the private key used for a generated signing request.
+    /// </summary>
+    public interface IPullDcaSigningKeyEvidenceProvider
+    {
+        /// <summary>
+        /// Returns the certificate containing the public key for the specified request.
+        /// An unknown application, profile, or request must cause an error.
+        /// </summary>
+        ValueTask<ByteString> GetSigningKeyCertificateAsync(
+            NodeId applicationId,
+            PullDcaCertificateProfile profile,
+            ByteString signingRequest,
+            CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
     /// Validates signing-request recovery against host-retained request and private-key state.
     /// No recovery provider is inferred from a credential installer.
     /// </summary>
     public interface IPullDcaSigningRecoveryProvider
     {
         /// <summary>
-        /// Proves that a currently assigned certificate belongs to the original signing request.
+        /// Validates whether a currently assigned certificate can be accepted for the original signing request.
         /// Implementations verify the retained request's registrar, application, group and type, possession of its
         /// private key, application URI, certificate validity and trust. They must reject stale assignments;
         /// matching a reused public key alone does not prove that the certificate resulted from this request.
@@ -383,6 +428,24 @@ namespace Opc.Ua.Gds.Client
             NodeId requestId,
             PullDcaCertificateProfile profile,
             PullDcaCredentials credentials,
+            CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
+    /// Records assigned certificates before a signing request is sent.
+    /// </summary>
+    public interface IPullDcaSigningAssignmentsObserver
+    {
+        /// <summary>
+        /// Retains the parallel certificate types and certificates for the supplied dispatch binding.
+        /// The arrays can include other certificate groups when the requested group is not yet assigned.
+        /// A failure prevents the signing request from being sent. A baseline can exclude earlier assignments;
+        /// it cannot establish which remote request produced a later certificate.
+        /// </summary>
+        ValueTask RecordAssignmentsAsync(
+            PullDcaSigningBinding binding,
+            ArrayOf<NodeId> certificateTypes,
+            ArrayOf<ByteString> certificates,
             CancellationToken cancellationToken = default);
     }
 
@@ -404,6 +467,95 @@ namespace Opc.Ua.Gds.Client
             PullDcaCertificateProfile profile,
             ByteString signingRequest,
             CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
+    /// Identifies a signing request and the channel used to send it.
+    /// Namespace indexes refer to <see cref="NamespaceUris"/>. <see cref="AttemptId"/> distinguishes
+    /// otherwise identical requests across resets and is not sent to the registrar.
+    /// </summary>
+    public sealed record PullDcaSigningBinding(
+        PullDcaRegistrar Registrar,
+        NodeId ApplicationId,
+        NodeId RequestId,
+        PullDcaCertificateProfile Profile,
+        ByteString SigningRequest,
+        ByteString SigningKeyCertificate,
+        ByteString ClientChannelCertificate,
+        ByteString RegistrarChannelCertificate,
+        string RegistrarApplicationUri,
+        ArrayOf<string> NamespaceUris,
+        Guid AttemptId);
+
+    /// <summary>
+    /// Retains signing dispatch and installation evidence for a host that supports recovery.
+    /// This interface does not provide synchronization between implementations or storage scopes.
+    /// </summary>
+    public interface IPullDcaSigningJournal
+    {
+        /// <summary>
+        /// Conditionally records a request before dispatch. The request identifier is null because the
+        /// registrar has not returned it. Only one competing caller may record a request for the same scope.
+        /// A recorded request must not be sent again when its dispatch outcome is unknown.
+        /// </summary>
+        ValueTask RecordDispatchAsync(
+            PullDcaSigningBinding binding,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Records the registrar's request identifier after StartSigningRequest returns.
+        /// A failure leaves the dispatch outcome unknown and prevents another StartSigningRequest.
+        /// </summary>
+        ValueTask RecordStartedAsync(
+            PullDcaSigningBinding binding,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Resolves a retained request against the selected session's namespace table.
+        /// An absent namespace, different registrar, application, or request must cause an error.
+        /// </summary>
+        ValueTask<PullDcaSigningBinding> ResolveAsync(
+            PullDcaRegistrar registrar,
+            NodeId applicationId,
+            NodeId requestId,
+            ArrayOf<string> namespaceUris,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Returns detached received credentials when they were recorded before an interrupted installation.
+        /// Returns null when the complete credentials have not yet been received.
+        /// </summary>
+        ValueTask<PullDcaCredentials?> GetReceivedAsync(
+            PullDcaSigningBinding binding,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Retains detached certificate, issuer, and complete trust-list data before installation begins.
+        /// </summary>
+        ValueTask RecordReceivedAsync(
+            PullDcaSigningBinding binding,
+            PullDcaCredentials credentials,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Records completed installation without removing the retained request or received credentials.
+        /// </summary>
+        ValueTask RecordInstalledAsync(
+            PullDcaSigningBinding binding,
+            CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
+    /// Receives the end of a local signing dispatch, including a failed or cancelled recording.
+    /// </summary>
+    public interface IPullDcaStartDispatchObserver
+    {
+        /// <summary>
+        /// Reports that the Start call and any request identifier publication have finished.
+        /// This notification is sent even if recording fails or the caller cancels the operation.
+        /// An implementation ignores an attempt that did not start a local dispatch.
+        /// </summary>
+        ValueTask OnStartCompletedAsync(Guid attemptId);
     }
 
     /// <summary>

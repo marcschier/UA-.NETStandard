@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -1740,6 +1741,15 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                 return new ValueTask<ArrayOf<ManagerDescription>>(Managers);
             }
 
+            public ValueTask<ArrayOf<ManagerDescription>> GetManagersOnInstalledChannelAsync(
+                PullDcaSigningBinding? binding,
+                ByteString installedCertificate,
+                CancellationToken ct)
+            {
+                m_fixture.Record("managers", ct);
+                return new ValueTask<ArrayOf<ManagerDescription>>(Managers);
+            }
+
             public ValueTask<NodeId> RegisterAsync(PullDcaManagedApplication application, CancellationToken ct)
             {
                 m_fixture.Record("register", ct);
@@ -1809,7 +1819,7 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                     throw new ServiceResultException(StatusCodes.BadNothingToDo);
                 }
                 return new ValueTask<(ByteString, ByteString, ArrayOf<ByteString>)>(
-                    (NewKeyPairCertificate, NewKeyPairPrivateKeyPfx, new[] { kIssuer }.ToArrayOf()));
+                    (NewKeyPairCertificate, NewKeyPairPrivateKeyPfx.Copy(), new[] { kIssuer }.ToArrayOf()));
             }
 
             public async ValueTask<TrustListDataType> ReadTrustListAsync(
@@ -1906,7 +1916,7 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                 Assert.That(credentials.IssuerCertificates, Is.EqualTo(new[] { kIssuer }.ToArrayOf()));
                 Assert.That(credentials.TrustList, Is.SameAs(m_fixture.Connection.TrustList));
                 KeyPairInstalledIds.Add(applicationId);
-                ReceivedPrivateKeyPfx = privateKeyPfx;
+                ReceivedPrivateKeyPfx = privateKeyPfx.Copy();
                 return default;
             }
 
@@ -1968,11 +1978,13 @@ namespace Opc.Ua.Gds.Tests.Onboarding
     public sealed class PullDcaConnectionTests
     {
         [Test]
-        public async Task KeyPairFinishDoesNotFollowRecreatedSession()
+        public async Task KeyPairFinishAllowsRecreatedSessionWithSameClientCertificate()
         {
             await using var fixture = new SessionRequestContextTestContext(
                 securityMode: MessageSecurityMode.SignAndEncrypt);
             fixture.MessageContext.NamespaceUris.GetIndexOrAppend(Opc.Ua.Gds.Namespaces.OpcUaGds);
+            byte[] clientCertificate = [17, 18, 19];
+            fixture.Channel.SetupGet(channel => channel.ClientChannelCertificate).Returns(clientCertificate);
             var applicationId = new NodeId("app", 0);
             var requestId = new NodeId("request", 0);
             var registrar = new PullDcaRegistrar(
@@ -2002,14 +2014,31 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                 applicationId, kProfile, CancellationToken.None).ConfigureAwait(false);
             Assert.That(started, Is.EqualTo(requestId));
             int callsBeforeRecreate = fixture.Requests.Count;
+            NodeId previousSessionId = fixture.ManagedSession.SessionId;
             fixture.Recreate();
 
-            ServiceResultException? error = await Assert.ThrowsAsync<ServiceResultException>(async () =>
-                await adapter.FinishNewKeyPairAsync(applicationId, requestId, CancellationToken.None)
-                    .ConfigureAwait(false));
-
-            Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSessionIdInvalid));
-            Assert.That(fixture.Requests, Has.Count.EqualTo(callsBeforeRecreate));
+            Assert.Multiple(() =>
+            {
+                Assert.That(fixture.ManagedSession.SessionId, Is.Not.EqualTo(previousSessionId));
+                Assert.That(
+                    fixture.ManagedSession.TransportChannel.ClientChannelCertificate,
+                    Is.EqualTo(clientCertificate));
+            });
+            var (certificate, privateKey, _) = await adapter.FinishNewKeyPairAsync(
+                applicationId, requestId, CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(certificate.IsEmpty, Is.False);
+                    Assert.That(privateKey.IsEmpty, Is.False);
+                    Assert.That(fixture.Requests.Count, Is.GreaterThan(callsBeforeRecreate));
+                });
+            }
+            finally
+            {
+                ClearReturnedPrivateKey(privateKey);
+            }
         }
 
         [TestCase(true)]
@@ -2372,6 +2401,14 @@ namespace Opc.Ua.Gds.Tests.Onboarding
         private static NodeId Resolve(ExpandedNodeId methodId, ServiceMessageContext context)
         {
             return ExpandedNodeId.ToNodeId(methodId, context.NamespaceUris);
+        }
+
+        private static void ClearReturnedPrivateKey(ByteString privateKey)
+        {
+            if (MemoryMarshal.TryGetArray(privateKey.Memory, out ArraySegment<byte> bytes) && bytes.Array != null)
+            {
+                Array.Clear(bytes.Array, bytes.Offset, bytes.Count);
+            }
         }
 
         private static readonly PullDcaRegistrar kRegistrar = new(
