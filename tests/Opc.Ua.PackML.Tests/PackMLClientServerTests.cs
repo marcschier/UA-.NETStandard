@@ -1918,6 +1918,100 @@ namespace Opc.Ua.PackML.Tests
         }
 
         /// <summary>
+        /// Keeps a live unit reference on each indexed copy of PackMLObjects.
+        /// </summary>
+        /// <param name="mirrorAlreadyPresent">Whether the second folder owner is published before the unit.</param>
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task LivePackMLFolderReferenceReachesAdditionalModelOwnerAsync(bool mirrorAlreadyPresent)
+        {
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            CancellationToken ct = deadline.Token;
+            INodeManagerLifecycle lifecycle = m_services.GetRequiredService<INodeManagerLifecycle>();
+            NodeId folderId = ExpandedNodeId.ToNodeId(ObjectIds.PackMLObjects, m_session.NamespaceUris);
+            Assert.That(folderId.IsNull, Is.False);
+            NodeState servingFolder = m_manager.Find(folderId)
+                ?? throw new InvalidOperationException("The serving PackMLObjects folder is unavailable.");
+            var unitFactory = new PreparedPackMLManagerFactory(failFirstUnit: false);
+            var mirrorFactory = new PackMLFolderMirrorFactory();
+            NodeManagerBatchResult? unitRegistration = null;
+            NodeManagerBatchResult? mirrorRegistration = null;
+            try
+            {
+                await using (IPreparedNodeManagerBatch prepared = await lifecycle.PrepareAsync(
+                    [NodeManagerBatchChange.Add(unitFactory)], ct).ConfigureAwait(false))
+                {
+                    unitRegistration = await prepared.CommitAsync(_ => default, ct).ConfigureAwait(false);
+                    Assert.That(unitRegistration.CleanupFailure, Is.Null);
+                }
+                PreparedPackMLManager owner = unitFactory.Manager
+                    ?? throw new InvalidOperationException("The unit owner was not created.");
+                if (mirrorAlreadyPresent)
+                {
+                    mirrorRegistration = await PublishMirrorAsync().ConfigureAwait(false);
+                }
+
+                Unit unit = await owner.Runtime.AddUnitAsync(
+                    new QualifiedName("LiveMirrorProbe", owner.NamespaceIndexes[0]),
+                    new EquipmentProvider(),
+                    cancellationToken: ct).ConfigureAwait(false);
+                await owner.AddExternalReferenceAsync(
+                    unit.Node, folderId, Ua.ReferenceTypeIds.Organizes, false, ct).ConfigureAwait(false);
+                Assert.That(servingFolder.ReferenceExists(
+                    Ua.ReferenceTypeIds.Organizes, false, unit.Node.NodeId), Is.True);
+                Assert.That(unit.Node.ReferenceExists(
+                    Ua.ReferenceTypeIds.Organizes, true, folderId), Is.True);
+
+                if (!mirrorAlreadyPresent)
+                {
+                    mirrorRegistration = await PublishMirrorAsync().ConfigureAwait(false);
+                }
+                PackMLFolderMirrorManager mirror = mirrorFactory.Manager
+                    ?? throw new InvalidOperationException("The second folder owner was not created.");
+                Assert.That(mirror.Folder, Is.Not.SameAs(servingFolder));
+                Assert.That(mirror.Folder.NodeId, Is.EqualTo(folderId));
+
+                var browser = new Browser(m_session, new BrowserOptions
+                {
+                    BrowseDirection = BrowseDirection.Forward,
+                    ReferenceTypeId = Ua.ReferenceTypeIds.Organizes,
+                    IncludeSubtypes = false,
+                    NodeClassMask = (int)NodeClass.Object
+                });
+                ArrayOf<ReferenceDescription> visible = await browser.BrowseAsync(folderId, ct)
+                    .ConfigureAwait(false);
+                Assert.That(
+                    visible.ToList().Select(reference =>
+                        ExpandedNodeId.ToNodeId(reference.NodeId, m_session.NamespaceUris)),
+                    Does.Contain(unit.Node.NodeId));
+                Assert.That(mirror.Folder.ReferenceExists(
+                    Ua.ReferenceTypeIds.Organizes, false, unit.Node.NodeId), Is.True,
+                    "The second owner must retain the live folder reference.");
+            }
+            finally
+            {
+                using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+                if (mirrorRegistration is not null)
+                {
+                    await RetirePackMLManagerAsync(lifecycle, mirrorRegistration, cleanup.Token).ConfigureAwait(false);
+                }
+                if (unitRegistration is not null)
+                {
+                    await RetirePackMLManagerAsync(lifecycle, unitRegistration, cleanup.Token).ConfigureAwait(false);
+                }
+            }
+
+            async Task<NodeManagerBatchResult> PublishMirrorAsync()
+            {
+                await using IPreparedNodeManagerBatch prepared = await lifecycle.PrepareAsync(
+                    [NodeManagerBatchChange.Add(mirrorFactory)], ct).ConfigureAwait(false);
+                NodeManagerBatchResult committed = await prepared.CommitAsync(_ => default, ct).ConfigureAwait(false);
+                Assert.That(committed.CleanupFailure, Is.Null);
+                return committed;
+            }
+        }
+
+        /// <summary>
         /// Keeps a prepared unit's external references private until publication or abort.
         /// </summary>
         /// <param name="publish">Whether to publish the prepared manager.</param>
@@ -3518,6 +3612,71 @@ namespace Opc.Ua.PackML.Tests
             /// Returns a custom forwarding facade with the same synchronous resource.
             /// </summary>
             Forwarded
+        }
+
+        /// <summary>
+        /// Creates a second owner for the PackMLObjects folder.
+        /// </summary>
+        private sealed class PackMLFolderMirrorFactory : IAsyncNodeManagerFactory
+        {
+            /// <summary>
+            /// Gets the second folder owner.
+            /// </summary>
+            public PackMLFolderMirrorManager? Manager { get; private set; }
+
+            /// <inheritdoc/>
+            public ArrayOf<string> NamespacesUris => [Namespaces.PackML];
+
+            /// <inheritdoc/>
+            public ValueTask<IAsyncNodeManager> CreateAsync(
+                IServerInternal server,
+                ApplicationConfiguration configuration,
+                CancellationToken cancellationToken = default)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                Manager = new PackMLFolderMirrorManager(server, configuration);
+                return new ValueTask<IAsyncNodeManager>(Manager);
+            }
+        }
+
+        /// <summary>
+        /// Indexes a separate folder with the published PackMLObjects NodeId.
+        /// </summary>
+        private sealed class PackMLFolderMirrorManager : AsyncCustomNodeManager
+        {
+            /// <summary>
+            /// Creates an owner for the existing PackML namespace.
+            /// </summary>
+            public PackMLFolderMirrorManager(IServerInternal server, ApplicationConfiguration configuration)
+                : base(server, configuration, Namespaces.PackML)
+            {
+            }
+
+            /// <summary>
+            /// Gets the indexed folder.
+            /// </summary>
+            public FolderState Folder { get; private set; } = null!;
+
+            /// <inheritdoc/>
+            public override async ValueTask CreateAddressSpaceAsync(
+                IDictionary<NodeId, IList<IReference>> externalReferences,
+                CancellationToken cancellationToken = default)
+            {
+                await base.CreateAddressSpaceAsync(externalReferences, cancellationToken).ConfigureAwait(false);
+                NodeId folderId = ExpandedNodeId.ToNodeId(ObjectIds.PackMLObjects, SystemContext.NamespaceUris);
+                if (folderId.IsNull)
+                {
+                    throw new InvalidOperationException("The PackML namespace is unavailable.");
+                }
+                Folder = new FolderState(null)
+                {
+                    NodeId = folderId,
+                    BrowseName = new QualifiedName(BrowseNames.PackMLObjects, folderId.NamespaceIndex),
+                    DisplayName = new LocalizedText(BrowseNames.PackMLObjects),
+                    TypeDefinitionId = Ua.ObjectTypeIds.FolderType
+                };
+                await AddPredefinedNodeAsync(Folder, cancellationToken).ConfigureAwait(false);
+            }
         }
 
         /// <summary>
