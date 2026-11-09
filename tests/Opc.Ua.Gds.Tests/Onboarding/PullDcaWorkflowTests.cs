@@ -2041,46 +2041,110 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             }
         }
 
+        /// <summary>
+        /// Pending key-pair responses retain the authenticated request binding until output is returned.
+        /// </summary>
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task KeyPairFinishRetainsBindingWhileCertificateIsPending(bool pendingStatus)
+        {
+            var applicationId = new NodeId("app", 2);
+            var requestId = new NodeId("request", 2);
+            int calls = 0;
+            await using var session = CreateConfidentialSession(_ =>
+            {
+                calls++;
+                return calls switch
+                {
+                    1 => Good(requestId),
+                    2 when pendingStatus => new CallMethodResult { StatusCode = StatusCodes.BadNothingToDo },
+                    2 => Good(default(ByteString), default(ByteString), Variant.From(ArrayOf<ByteString>.Empty)),
+                    _ => Good(ByteString.From(new byte[] { 10 }), ByteString.From(new byte[] { 11 }),
+                        Variant.From(ArrayOf<ByteString>.Empty))
+                };
+            });
+            var adapter = new PullDcaConnection(session.InnerSession, kRegistrar, session.Telemetry, 1024, _ => default);
+            Assert.That(await adapter.StartNewKeyPairAsync(applicationId, kProfile, CancellationToken.None)
+                .ConfigureAwait(false), Is.EqualTo(requestId));
+            if (pendingStatus)
+            {
+                ServiceResultException? pending = await Assert.ThrowsAsync<ServiceResultException>(async () =>
+                    await adapter.FinishNewKeyPairAsync(applicationId, requestId, CancellationToken.None)
+                        .ConfigureAwait(false));
+                Assert.That(pending!.StatusCode, Is.EqualTo(StatusCodes.BadNothingToDo));
+            }
+            else
+            {
+                var (pendingCertificate, pendingKey, _) = await adapter.FinishNewKeyPairAsync(
+                    applicationId, requestId, CancellationToken.None).ConfigureAwait(false);
+                Assert.That(pendingCertificate.IsEmpty, Is.True);
+                Assert.That(pendingKey.IsEmpty, Is.True);
+            }
+            var (certificate, privateKey, _) = await adapter.FinishNewKeyPairAsync(
+                applicationId, requestId, CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                Assert.That(certificate, Is.EqualTo(ByteString.From(new byte[] { 10 })));
+                Assert.That(privateKey, Is.EqualTo(ByteString.From(new byte[] { 11 })));
+                Assert.That(calls, Is.EqualTo(3));
+                ServiceResultException? consumed = await Assert.ThrowsAsync<ServiceResultException>(async () =>
+                    await adapter.FinishNewKeyPairAsync(applicationId, requestId, CancellationToken.None)
+                        .ConfigureAwait(false));
+                Assert.That(consumed!.StatusCode, Is.EqualTo(StatusCodes.BadSecurityChecksFailed));
+                Assert.That(calls, Is.EqualTo(3));
+            }
+            finally
+            {
+                ClearReturnedPrivateKey(privateKey);
+            }
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public async Task NewKeyPairRequestsRequireConfidentialDispatch(bool finish)
         {
-            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
-            ServiceMessageContext context = ServiceMessageContext.Create(telemetry);
-            context.NamespaceUris.GetIndexOrAppend(Opc.Ua.Gds.Namespaces.OpcUaGds);
-            Mock<ISession> session = CreateSession(context, _ => throw new AssertionException("Unexpected dispatch."));
+            var applicationId = new NodeId("app", 2);
+            var requestId = new NodeId("request", 2);
+            await using var session = CreateConfidentialSession(_ => Good(requestId));
+            bool rejectCapture = !finish;
             var adapter = new PullDcaConnection(
-                session.Object,
+                session.InnerSession,
                 kRegistrar,
-                telemetry,
+                session.Telemetry,
                 1024,
                 _ => default,
-                _ => throw new ServiceResultException(StatusCodes.BadSecurityModeInsufficient));
+                ct => rejectCapture
+                    ? throw new ServiceResultException(StatusCodes.BadSecurityModeInsufficient)
+                    : SessionRequestContext.CaptureConfidentialAsync(session.ManagedSession, ct));
+            if (finish)
+            {
+                await adapter.StartNewKeyPairAsync(applicationId, kProfile, CancellationToken.None)
+                    .ConfigureAwait(false);
+                rejectCapture = true;
+            }
+            int callsBeforeRejection = session.Requests.Count;
 
             ServiceResultException? error = await Assert.ThrowsAsync<ServiceResultException>(async () =>
             {
                 if (finish)
                 {
                     await adapter.FinishNewKeyPairAsync(
-                        new NodeId(1), new NodeId(2), CancellationToken.None).ConfigureAwait(false);
+                        applicationId, requestId, CancellationToken.None).ConfigureAwait(false);
                 }
                 else
                 {
                     await adapter.StartNewKeyPairAsync(
-                        new NodeId(1), kProfile, CancellationToken.None).ConfigureAwait(false);
+                        applicationId, kProfile, CancellationToken.None).ConfigureAwait(false);
                 }
             });
 
             Assert.That(error!.StatusCode, Is.EqualTo(StatusCodes.BadSecurityModeInsufficient));
+            Assert.That(session.Requests, Has.Count.EqualTo(callsBeforeRejection));
         }
 
         [Test]
         public async Task ProductionAdapterUsesGeneratedRegistrarAndCertificateDirectoryMethods()
         {
-            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
-            ServiceMessageContext context = ServiceMessageContext.Create(telemetry);
-            context.NamespaceUris.GetIndexOrAppend(Opc.Ua.Gds.Namespaces.OpcUaGds);
-            context.NamespaceUris.GetIndexOrAppend(Opc.Ua.Onboarding.Namespaces.OpcUaOnboarding);
             var requests = new List<CallMethodRequest>();
             var manager = new ManagerDescription
             {
@@ -2093,7 +2157,7 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             ByteString certificate = ByteString.From(new byte[] { 1, 2, 3 });
             ArrayOf<ByteString> issuers = [certificate];
             ArrayOf<ManagerDescription> managers = [manager];
-            Mock<ISession> session = CreateSession(context, request =>
+            await using var session = CreateConfidentialSession(request =>
             {
                 requests.Add(request);
                 return requests.Count switch
@@ -2107,8 +2171,9 @@ namespace Opc.Ua.Gds.Tests.Onboarding
                     _ => Good(Variant.From(new[] { kProfile.CertificateTypeId }.ToArrayOf()), Variant.From(issuers))
                 };
             });
+            var context = (ServiceMessageContext)session.MessageContext;
             int reconnects = 0;
-            var adapter = new PullDcaConnection(session.Object, kRegistrar, telemetry, 1024, _ =>
+            var adapter = new PullDcaConnection(session.InnerSession, kRegistrar, session.Telemetry, 1024, _ =>
             {
                 reconnects++;
                 return default;
@@ -2163,29 +2228,27 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             Assert.That(sentApplicationId, Is.EqualTo(applicationId));
             Assert.That(requests[3].InputArguments[3].TryGetValue(out ByteString sentCsr), Is.True);
             Assert.That(sentCsr, Is.EqualTo(certificate));
-            session.Verify(s => s.Dispose(), Times.Never);
+            Assert.That(session.InnerSession.Connected, Is.True);
         }
 
         [Test]
         public async Task ProductionAdapterUsesGeneratedNewKeyPairAndFinishProxies()
         {
-            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
-            ServiceMessageContext context = ServiceMessageContext.Create(telemetry);
-            context.NamespaceUris.GetIndexOrAppend(Opc.Ua.Gds.Namespaces.OpcUaGds);
             var applicationId = new NodeId("app", 2);
             var requestId = new NodeId("request", 2);
             ByteString certificate = ByteString.From(new byte[] { 1, 2 });
             ByteString privateKeyPfx = ByteString.From(new byte[] { 3, 4 });
             ArrayOf<ByteString> issuers = [ByteString.From(new byte[] { 5, 6 })];
             var requests = new List<CallMethodRequest>();
-            Mock<ISession> session = CreateSession(context, request =>
+            await using var session = CreateConfidentialSession(request =>
             {
                 requests.Add(request);
                 return requests.Count == 1
                     ? Good(requestId)
                     : Good(certificate, privateKeyPfx, Variant.From(issuers));
             });
-            var adapter = new PullDcaConnection(session.Object, kRegistrar, telemetry, 1024, _ => default);
+            var context = (ServiceMessageContext)session.MessageContext;
+            var adapter = new PullDcaConnection(session.InnerSession, kRegistrar, session.Telemetry, 1024, _ => default);
 
             NodeId actualRequestId = await adapter.StartNewKeyPairAsync(
                 applicationId, kProfile, CancellationToken.None).ConfigureAwait(false);
@@ -2215,7 +2278,7 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             Assert.That(privateKeyFormat, Is.EqualTo("PFX"));
             Assert.That(requests[0].InputArguments[6].TryGetValue(out string privateKeyPassword), Is.True);
             Assert.That(privateKeyPassword, Is.Empty);
-            session.Verify(value => value.Dispose(), Times.Never);
+            Assert.That(session.InnerSession.Connected, Is.True);
         }
 
         [Test]
@@ -2373,6 +2436,30 @@ namespace Opc.Ua.Gds.Tests.Onboarding
             Assert.That(requests, Has.Count.EqualTo(4));
             Assert.That(requests[3].MethodId, Is.EqualTo(Opc.Ua.MethodIds.FileType_Close));
             session.Verify(s => s.Dispose(), Times.Never);
+        }
+
+        /// <summary>
+        /// Supplies a real confidential dispatch owner for certificate-directory transport tests.
+        /// </summary>
+        private static SessionRequestContextTestContext CreateConfidentialSession(
+            Func<CallMethodRequest, CallMethodResult> handler)
+        {
+            var session = new SessionRequestContextTestContext(
+                securityMode: MessageSecurityMode.SignAndEncrypt);
+            session.MessageContext.NamespaceUris.GetIndexOrAppend(Opc.Ua.Gds.Namespaces.OpcUaGds);
+            session.MessageContext.NamespaceUris.GetIndexOrAppend(Opc.Ua.Onboarding.Namespaces.OpcUaOnboarding);
+            session.Channel.Object.EndpointDescription.EndpointUrl = kRegistrar.EndpointUrl.AbsoluteUri;
+            session.Channel.SetupGet(channel => channel.ClientChannelCertificate).Returns(new byte[] { 1, 2, 3 });
+            session.Channel.SetupGet(channel => channel.ServerChannelCertificate).Returns(new byte[] { 4, 5, 6 });
+            session.Handler = (request, _) => request switch
+            {
+                BrowseRequest => new ValueTask<IServiceResponse>(
+                    new BrowseResponse { Results = [new BrowseResult { References = [] }] }),
+                CallRequest call => new ValueTask<IServiceResponse>(
+                    new CallResponse { Results = [handler(call.MethodsToCall[0])] }),
+                _ => throw new AssertionException("Unexpected certificate-directory transport request.")
+            };
+            return session;
         }
 
         private static Mock<ISession> CreateSession(

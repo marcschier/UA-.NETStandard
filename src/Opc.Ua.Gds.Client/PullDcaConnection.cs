@@ -497,14 +497,18 @@ namespace Opc.Ua.Gds.Client
                 context.Session, m_selectedRegistrar.CertificateDirectoryId, m_telemetry);
             try
             {
-                var result = await directory.FinishRequestAsync(applicationId, requestId, ct).ConfigureAwait(false);
-                m_keyPairRequests.TryRemove(key, out _);
-                m_installedKeyPairBinding = binding with
+                var (certificate, privateKey, issuers) = await directory.FinishRequestAsync(
+                    applicationId, requestId, ct).ConfigureAwait(false);
+                if (!certificate.IsEmpty || !privateKey.IsEmpty)
                 {
-                    ApplicationId = applicationId,
-                    RequestId = requestId
-                };
-                return result;
+                    m_keyPairRequests.TryRemove(key, out _);
+                    m_installedKeyPairBinding = binding with
+                    {
+                        ApplicationId = applicationId,
+                        RequestId = requestId
+                    };
+                }
+                return (certificate, privateKey, issuers);
             }
             catch (ServiceResultException error) when (error.StatusCode == StatusCodes.BadInvalidArgument)
             {
@@ -826,13 +830,16 @@ namespace Opc.Ua.Gds.Client
                 throw new ServiceResultException(
                     StatusCodes.BadSecurityChecksFailed, "The signing request belongs to a different channel.");
             }
+        }
 
-            private ValueTask<SessionRequestContext> CaptureConfidentialAsync(CancellationToken cancellationToken)
-            {
-                return m_confidentialContextFactory == null
-                    ? SessionRequestContext.CaptureConfidentialAsync(m_session, cancellationToken)
-                    : m_confidentialContextFactory(cancellationToken);
-            }
+        /// <summary>
+        /// Captures the current confidential channel through the production or injected transport boundary.
+        /// </summary>
+        private ValueTask<SessionRequestContext> CaptureConfidentialAsync(CancellationToken cancellationToken)
+        {
+            return m_confidentialContextFactory == null
+                ? SessionRequestContext.CaptureConfidentialAsync(m_session, cancellationToken)
+                : m_confidentialContextFactory(cancellationToken);
         }
 
         /// <summary>
