@@ -196,9 +196,17 @@ namespace Opc.Ua.Pumps.Server
                 }
                 identity.AccessLevel = (byte)(identity.AccessLevel & ~AccessLevels.CurrentWrite);
                 identity.UserAccessLevel = (byte)(identity.UserAccessLevel & ~AccessLevels.CurrentWrite);
+                var fieldBindings = new IdentityFieldBinding[variables.Length];
+                for (int i = 0; i < variables.Length; i++)
+                {
+                    fieldBindings[i] = new IdentityFieldBinding(
+                        variables[i],
+                        variables[i].OnSimpleWriteValueAsync ??
+                            throw new InvalidOperationException("The identity field was not bound."));
+                }
                 if (!registrations.Identities.TryAdd(
                     productInstanceUri,
-                    new IdentityBinding(pump.NodeId, store)))
+                    new IdentityBinding(pump.NodeId, store, fieldBindings)))
                 {
                     throw new InvalidOperationException("This ProductInstanceUri already has an identity binding.");
                 }
@@ -216,7 +224,8 @@ namespace Opc.Ua.Pumps.Server
         internal static bool HasPersistentBinding(PumpsRuntime runtime, PumpState pump)
         {
             if (!s_registrations.TryGetValue(runtime, out IdentityRegistrations? registrations) ||
-                pump.Identification?.FindChild(
+                pump.Identification is not PumpIdentificationState identification ||
+                identification.FindChild(
                     runtime.SystemContext,
                     new QualifiedName(Opc.Ua.Di.BrowseNames.ProductInstanceUri, runtime.NamespaceIndices.Di))
                     is not BaseVariableState identity ||
@@ -226,9 +235,25 @@ namespace Opc.Ua.Pumps.Server
                 return false;
             }
 
-            return registrations.Identities.TryGetValue(productInstanceUri, out IdentityBinding? binding) &&
-                binding.PumpNodeId == pump.NodeId &&
-                binding.Store.IsPersistent;
+            if (!registrations.Identities.TryGetValue(productInstanceUri, out IdentityBinding? binding) ||
+                binding.PumpNodeId != pump.NodeId ||
+                !binding.Store.IsPersistent)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < binding.Fields.Length; i++)
+            {
+                IdentityFieldBinding field = binding.Fields[i];
+                if (!ReferenceEquals(
+                    identification.FindChild(runtime.SystemContext, field.Variable.BrowseName),
+                    field.Variable) ||
+                    field.Variable.OnSimpleWriteValueAsync != field.WriteHandler)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>
@@ -277,7 +302,17 @@ namespace Opc.Ua.Pumps.Server
         /// <summary>
         /// Associates a pump identity with the persistent AMB store that owns its retained values.
         /// </summary>
-        private sealed record IdentityBinding(NodeId PumpNodeId, IAssetConfigurationStore Store);
+        private sealed record IdentityFieldBinding(
+            BaseVariableState Variable,
+            NodeValueSimpleWriteEventHandlerAsync WriteHandler);
+
+        /// <summary>
+        /// Associates a pump identity with its persistent AMB store and each field's write binding.
+        /// </summary>
+        private sealed record IdentityBinding(
+            NodeId PumpNodeId,
+            IAssetConfigurationStore Store,
+            IdentityFieldBinding[] Fields);
 
         /// <summary>Registrations do not extend an address-space owner's lifetime.</summary>
         private static readonly ConditionalWeakTable<PumpsRuntime, IdentityRegistrations> s_registrations = new();

@@ -518,6 +518,42 @@ namespace Opc.Ua.Pumps.Tests
         }
 
         /// <summary>
+        /// Profile publication requires each writable identity field to retain its AMB persistence handler.
+        /// </summary>
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public async Task PumpBaseProfileWithdrawsWhenIdentityFieldBindingChangesAsync(int fieldIndex)
+        {
+            SetServerProfiles(PumpBaseServerProfilePrerequisites);
+            IPumpBuilder pump = await CreateAsync("ChangedIdentityBinding");
+            pump.Identification.Set(
+                Opc.Ua.Di.BrowseNames.ProductInstanceUri,
+                Variant.From($"urn:example:pump:changed-identity-binding:{fieldIndex}"));
+            await m_fixture.Manager.Runtime.WithRetainedIdentificationAsync(
+                pump, PersistentStore().Object, WritableIdentityPermissions);
+
+            BaseVariableState[] fields =
+            [
+                (BaseVariableState)pump.Identification.Child(Opc.Ua.Di.BrowseNames.AssetId)!,
+                (BaseVariableState)pump.Identification.Child(Opc.Ua.Di.BrowseNames.ComponentName)!,
+                (BaseVariableState)pump.Identification.Child(Opc.Ua.Machinery.BrowseNames.Location)!
+            ];
+            BaseVariableState field = fields[fieldIndex];
+            BaseVariableState replacementSource = fields[(fieldIndex + 1) % fields.Length];
+            Assert.That(field.OnSimpleWriteValueAsync, Is.Not.Null);
+            Assert.That(replacementSource.OnSimpleWriteValueAsync, Is.Not.Null);
+            Assert.That(
+                replacementSource.OnSimpleWriteValueAsync,
+                Is.Not.EqualTo(field.OnSimpleWriteValueAsync));
+
+            field.OnSimpleWriteValueAsync = replacementSource.OnSimpleWriteValueAsync;
+
+            var conformance = new PumpsConformance(m_fixture.Manager.Runtime);
+            Assert.That(Advertises(conformance.ServerProfiles, PumpBaseServerProfile), Is.False);
+        }
+
+        /// <summary>
         /// Only a forward Organizes reference from Machines to the current pump satisfies the profile.
         /// </summary>
         [Test]
